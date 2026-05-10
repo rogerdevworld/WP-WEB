@@ -1,0 +1,8 @@
+asgiref
+Django
+django-cors-headers
+django-ninja
+psycopg2-binary
+sqlparse
+tzdata
+Pillow

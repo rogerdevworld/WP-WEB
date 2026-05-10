@@ -19,7 +19,8 @@ import {
   ChevronDown,
   CheckCircle2,
   X,
-  Plus
+  Plus,
+  Timer
 } from 'lucide-react';
 import { i18n, mealOptions } from '../data';
 
@@ -290,6 +291,35 @@ export default function Panel({ lang, toggleLang, goTo, user, setUser, selectedD
                   <button className="w-full btn-cyber-primary py-4 text-[10px] font-black uppercase tracking-widest">
                     ACTIVATE_FULL_CYCLE
                   </button>
+                </div>
+              </div>
+
+              <div className="card-cyber p-8 bg-gradient-to-br from-green-500/10 to-transparent border-green-500/20">
+                <h3 className="text-[10px] font-mono text-green-500 tracking-widest uppercase mb-6 flex items-center gap-2">
+                  <BarChart3 size={12} /> Bio-Economy Analysis
+                </h3>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[8px] font-mono text-gray-500 uppercase">Tiempo Recuperado</div>
+                      <div className="text-2xl font-display font-black text-white">
+                        {Math.round(selectedDays.size * 1.5)}<span className="text-[10px] ml-1 opacity-50 uppercase">Horas</span>
+                      </div>
+                    </div>
+                    <Timer size={20} className="text-green-500 opacity-50" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[8px] font-mono text-gray-500 uppercase">Capital Optimizado</div>
+                      <div className="text-2xl font-display font-black text-white">
+                        {Math.round(selectedDays.size * 3 * 9)}<span className="text-[10px] ml-1 opacity-50 uppercase">€</span>
+                      </div>
+                    </div>
+                    <CreditCard size={20} className="text-green-500 opacity-50" />
+                  </div>
+                  <p className="text-[8px] font-mono text-gray-600 uppercase leading-tight italic">
+                    * Estimación basada en compra, cocina y limpieza vs. restauración externa (BCN Avg).
+                  </p>
                 </div>
               </div>
             </div>

@@ -1,0 +1,9 @@
+node_modules
+.git
+.env
+dist
+.vscode
+.gemini
+docker_data
+postgres_data
+!docker

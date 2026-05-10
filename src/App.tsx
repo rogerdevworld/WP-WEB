@@ -49,7 +49,7 @@ export default function App() {
    */
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
-    const endpoint = isRegistering ? 'http://localhost:8000/api/register/' : 'http://localhost:8000/api/login/'
+    const endpoint = isRegistering ? '/api/register' : '/api/login'
     const payload = isRegistering ? { email, password, name, phone, height, weight } : { email, password }
 
     try {
@@ -78,73 +78,6 @@ export default function App() {
   /**
    * AuthModal HUD
    */
-      {/* Auth Modal HUD */}
-      <AnimatePresence>
-        {showLogin && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-md" onClick={() => setShowLogin(false)}>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
-              animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-              exit={{ opacity: 0, scale: 0.9, rotateX: 20 }}
-              className="card-cyber max-w-md w-full p-10 bg-black/80 relative"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="absolute -top-1 -left-1 w-8 h-8 border-t-2 border-l-2 border-primary" />
-              <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-2 border-r-2 border-primary" />
-
-              <div className="text-center mb-8">
-                <div className="text-[10px] font-mono text-primary tracking-[0.5em] uppercase mb-2">ACCESS_PROTOCOL</div>
-                <h2 className="text-2xl font-display font-black uppercase">
-                  {isRegistering ? (lang==='es'?'Registro Warnfood':'BIO_REGISTRATION') : (lang==='es'?'Acceso Clientes':'OPERATOR_LOGIN')}
-                </h2>
-              </div>
-              
-              <form onSubmit={handleAuth} className="space-y-4">
-                {isRegistering && (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Full Name</label>
-                      <input type="text" required value={name} onChange={e=>setName(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono" placeholder="NAME_INPUT" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Height (CM)</label>
-                        <input type="number" value={height} onChange={e=>setHeight(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono" placeholder="CM" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Weight (KG)</label>
-                        <input type="number" value={weight} onChange={e=>setWeight(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono" placeholder="KG" />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div className="space-y-1">
-                  <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Email Address</label>
-                  <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono" placeholder="USER_ID@DOMAIN.COM" />
-                </div>
-                
-                <div className="space-y-1">
-                  <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Access Key</label>
-                  <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono" placeholder="••••••••" />
-                </div>
-                
-                <button type="submit" className="w-full btn-cyber-primary py-4 mt-6 flex items-center justify-center gap-2">
-                  <Zap size={16} /> {isRegistering ? (lang==='es'?'INICIAR PROTOCOLO':'INITIALIZE_PROTOCOL') : (lang==='es'?'ENTRAR':'EXECUTE_LOGIN')}
-                </button>
-              </form>
-              
-              <div className="mt-8 text-center text-[10px] font-mono text-gray-500">
-                {isRegistering ? (
-                  <>{lang==='es'?'¿Ya tienes cuenta?':'ALREADY_ENROLLED?'} <span onClick={()=>setIsRegistering(false)} className="text-primary cursor-pointer hover:underline">LOGIN_HERE</span></>
-                ) : (
-                  <>{lang==='es'?'¿No eres miembro todavía?':'NO_BIO_RECORD?'} <span onClick={()=>setIsRegistering(true)} className="text-primary cursor-pointer hover:underline">CREATE_ACCOUNT</span></>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
   return (
     <div className="bg-black text-white min-h-screen font-sans selection:bg-primary selection:text-black">
@@ -183,6 +116,74 @@ export default function App() {
           ENCRYPTION: BIO_SECURE
         </div>
       </div>
+
+      {/* Auth Modal HUD */}
+      <AnimatePresence>
+        {showLogin && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-md" onClick={() => setShowLogin(false)}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
+              animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+              exit={{ opacity: 0, scale: 0.9, rotateX: 20 }}
+              className="card-cyber max-w-md w-full p-10 bg-black/80 relative"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="absolute -top-1 -left-1 w-8 h-8 border-t-2 border-l-2 border-primary" />
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-2 border-r-2 border-primary" />
+
+              <div className="text-center mb-8">
+                <div className="text-[10px] font-mono text-primary tracking-[0.5em] uppercase mb-2">ACCESS_PROTOCOL</div>
+                <h2 className="text-2xl font-display font-black uppercase text-white">
+                  {isRegistering ? (lang==='es'?'Registro Warnfood':'BIO_REGISTRATION') : (lang==='es'?'Acceso Clientes':'OPERATOR_LOGIN')}
+                </h2>
+              </div>
+              
+              <form onSubmit={handleAuth} className="space-y-4">
+                {isRegistering && (
+                  <>
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Full Name</label>
+                      <input type="text" required value={name} onChange={e=>setName(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white" placeholder="NAME_INPUT" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Height (CM)</label>
+                        <input type="number" value={height} onChange={e=>setHeight(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white" placeholder="CM" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Weight (KG)</label>
+                        <input type="number" value={weight} onChange={e=>setWeight(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white" placeholder="KG" />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Email Address</label>
+                  <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white" placeholder="USER_ID@DOMAIN.COM" />
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Access Key</label>
+                  <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white" placeholder="••••••••" />
+                </div>
+                
+                <button type="submit" className="w-full btn-cyber-primary py-4 mt-6 flex items-center justify-center gap-2">
+                  <Zap size={16} /> {isRegistering ? (lang==='es'?'INICIAR PROTOCOLO':'INITIALIZE_PROTOCOL') : (lang==='es'?'ENTRAR':'EXECUTE_LOGIN')}
+                </button>
+              </form>
+              
+              <div className="mt-8 text-center text-[10px] font-mono text-gray-500">
+                {isRegistering ? (
+                  <>{lang==='es'?'¿Ya tienes cuenta?':'ALREADY_ENROLLED?'} <span onClick={()=>setIsRegistering(false)} className="text-primary cursor-pointer hover:underline">LOGIN_HERE</span></>
+                ) : (
+                  <>{lang==='es'?'¿No eres miembro todavía?':'NO_BIO_RECORD?'} <span onClick={()=>setIsRegistering(true)} className="text-primary cursor-pointer hover:underline">CREATE_ACCOUNT</span></>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
