@@ -41,7 +41,16 @@ export const i18n = {
       settings: "Ajustes",
       logout: "Cerrar Sesión",
       edit: "Editar Perfil",
-      minUnits: "Se requiere un mínimo de 15 platos para activar la suscripción"
+      minUnits: "Se requiere un mínimo de 15 platos para activar la suscripción",
+      meals: {
+        breakfast: "Desayuno",
+        lunch: "Almuerzo (Obligatorio)",
+        snack1: "Snack Mañana",
+        snack2: "Snack Tarde",
+        dinner: "Cena",
+        juices: "Jugos",
+        warningMultiple: "⚠️ Protocolo de sobrecarga: Se ha seleccionado más de una unidad."
+      }
     }
   },
   en: {
@@ -82,31 +91,48 @@ export const i18n = {
       settings: "Settings",
       logout: "Logout",
       edit: "Edit Profile",
-      minUnits: "A minimum of 15 meals is required to activate subscription"
+      minUnits: "A minimum of 15 meals is required to activate subscription",
+      meals: {
+        breakfast: "Breakfast",
+        lunch: "Lunch (Mandatory)",
+        snack1: "Morning Snack",
+        snack2: "Afternoon Snack",
+        dinner: "Dinner",
+        juices: "Juices",
+        warningMultiple: "⚠️ Overload Protocol: More than one unit selected."
+      }
     }
   }
 };
 
 export const mealOptions = {
   breakfast: [
-    { id: 'b1', name: { es: 'Avena Protein Cyber-Bowl', en: 'Protein Oats Cyber-Bowl' }, kcal: 350 },
-    { id: 'b2', name: { es: 'Tortitas de Claras y Plátano', en: 'Egg White & Banana Pancakes' }, kcal: 420 },
-    { id: 'b3', name: { es: 'Tostada Aguacate & Pavo', en: 'Avocado & Turkey Toast' }, kcal: 380 }
+    { id: 'b1', name: { es: 'Avena Protein Cyber-Bowl', en: 'Protein Oats Cyber-Bowl' }, kcal: 350, img: '/meals/avena_bowl.png' },
+    { id: 'b2', name: { es: 'Tortitas de Claras y Plátano', en: 'Egg White & Banana Pancakes' }, kcal: 420, img: '/meals/tortitas.png' },
+    { id: 'b3', name: { es: 'Tostada Aguacate & Pavo', en: 'Avocado & Turkey Toast' }, kcal: 380, img: '/meals/tostada_aguacate.png' }
+  ],
+  snack1: [
+    { id: 's1_1', name: { es: 'Mix de Frutos Secos Bio', en: 'Bio Nut Mix' }, kcal: 180, img: '/meals/frutos_secos.png' },
+    { id: 's1_2', name: { es: 'Yogur Griego con Chía', en: 'Greek Yogurt with Chia' }, kcal: 150, img: '/meals/yogur_chia.png' }
   ],
   lunch: [
-    { id: 'l1', name: { es: 'Lomo Saltado Cyber-Wok', en: 'Cyber-Wok Lomo Saltado' }, kcal: 580, country: 'Perú' },
-    { id: 'l2', name: { es: 'Pollo Campero al Pimentón', en: 'Paprika Country Chicken' }, kcal: 490, country: 'España' },
-    { id: 'l3', name: { es: 'Bowl Pabellón Power', en: 'Pabellón Power Bowl' }, kcal: 620, country: 'Venezuela' }
+    { id: 'l1', name: { es: 'Lomo Saltado Cyber-Wok', en: 'Cyber-Wok Lomo Saltado' }, kcal: 580, country: 'Perú', img: '/meals/lomo_saltado.png' },
+    { id: 'l2', name: { es: 'Pollo Campero al Pimentón', en: 'Paprika Country Chicken' }, kcal: 490, country: 'España', img: '/meals/pollo_pimenton.png' },
+    { id: 'l3', name: { es: 'Bowl Pabellón Power', en: 'Pabellón Power Bowl' }, kcal: 620, country: 'Venezuela', img: '/meals/pabellon_bowl.png' }
+  ],
+  snack2: [
+    { id: 's2_1', name: { es: 'Barrita de Proteína Raw', en: 'Raw Protein Bar' }, kcal: 210, img: '/meals/barrita_proteina.png' },
+    { id: 's2_2', name: { es: 'Manzana con Crema de Cacahuete', en: 'Apple with Peanut Butter' }, kcal: 190, img: '/meals/manzana_cacahuete.png' }
   ],
   dinner: [
-    { id: 'd1', name: { es: 'Salmón Miso-Cyber', en: 'Miso-Cyber Salmon' }, kcal: 550 },
-    { id: 'd2', name: { es: 'Wok de Heura & Verduras', en: 'Heura & Veggie Wok' }, kcal: 400 },
-    { id: 'd3', name: { es: 'Tacos de Pollo Efficiency', en: 'Efficiency Chicken Tacos' }, kcal: 480 }
+    { id: 'd1', name: { es: 'Salmón Miso-Cyber', en: 'Miso-Cyber Salmon' }, kcal: 550, img: '/meals/salmon_miso.png' },
+    { id: 'd2', name: { es: 'Wok de Heura & Verduras', en: 'Heura & Veggie Wok' }, kcal: 400, img: '/meals/wok_heura.png' },
+    { id: 'd3', name: { es: 'Tacos de Pollo Efficiency', en: 'Efficiency Chicken Tacos' }, kcal: 480, img: '/meals/tacos_pollo.png' }
   ],
   juices: [
-    { id: 'j1', name: { es: 'Green Bio-Hacker (Detox)', en: 'Green Bio-Hacker (Detox)' }, kcal: 120 },
-    { id: 'j2', name: { es: 'Red Recovery (Antiox)', en: 'Red Recovery (Antiox)' }, kcal: 150 },
-    { id: 'j3', name: { es: 'Cyber-Citrus (Vitamina C)', en: 'Cyber-Citrus (Vitamin C)' }, kcal: 90 }
+    { id: 'j1', name: { es: 'Green Bio-Hacker (Detox)', en: 'Green Bio-Hacker (Detox)' }, kcal: 120, img: '/meals/green_juice.png' },
+    { id: 'j2', name: { es: 'Red Recovery (Antiox)', en: 'Red Recovery (Antiox)' }, kcal: 150, img: '/meals/red_juice.png' },
+    { id: 'j3', name: { es: 'Cyber-Citrus (Vitamina C)', en: 'Cyber-Citrus (Vitamin C)' }, kcal: 90, img: '/meals/citrus_juice.png' }
   ]
 };
 
