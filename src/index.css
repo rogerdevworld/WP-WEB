@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #FFD700;
+  --bg: #000000;
+}
+
+body {
+  background-color: var(--bg);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+@layer components {
+  .btn-cyber {
+    @apply relative px-6 py-3 font-display font-bold uppercase tracking-wider transition-all duration-300;
+    clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
+  }
+  
+  .btn-cyber-primary {
+    @apply btn-cyber bg-primary text-black hover:bg-white hover:scale-105 active:scale-95;
+  }
+  
+  .btn-cyber-outline {
+    @apply btn-cyber border border-primary text-primary hover:bg-primary/10;
+  }
+  
+  .card-cyber {
+    @apply bg-white/5 border border-white/10 backdrop-blur-md rounded-lg overflow-hidden transition-all duration-500 hover:border-primary/50;
+  }
+
+  .hud-line {
+    @apply h-px bg-primary/30 relative overflow-hidden;
+  }
+
+  .hud-line::after {
+    content: '';
+    @apply absolute top-0 left-0 h-full w-20 bg-primary shadow-[0_0_15px_#FFD700] animate-[shimmer_2s_infinite];
+  }
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #000;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 10px;
+}
