@@ -16,17 +16,44 @@ import {
 } from 'lucide-react';
 import { i18n, weeklyMenu, sizes } from '../data';
 import HeroBattleSlider from '../components/HeroBattleSlider';
+import MealCatalog from '../components/MealCatalog';
 
 export default function Demo({ lang, toggleLang, goTo, user, setUser, setShowLogin, setIsRegistering, selectedDays, setSelectedDays }: any) {
   const t = i18n[lang as 'es'|'en'];
   const [activeSize, setActiveSize] = useState(1);
   const [scrollY, setScrollY] = useState(0);
+  const [meals, setMeals] = useState<any[]>([]);
+  const [activeCategory, setActiveCategory] = useState('lunch');
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
+    
+    fetch('http://localhost:8000/api/meals/list')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setMeals(data);
+      })
+      .catch(err => console.error("API_LOAD_ERROR:", err));
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const categories = [
+    { id: 'breakfast', es: 'DESAYUNO', en: 'BREAKFAST' },
+    { id: 'lunch', es: 'ALMUERZO', en: 'LUNCH' },
+    { id: 'dinner', es: 'CENA', en: 'DINNER' },
+    { id: 'snacks', es: 'SNACKS', en: 'SNACKS' },
+    { id: 'juices', es: 'JUGOS', en: 'JUICES' }
+  ];
+
+  const filteredMeals = Array.isArray(meals) ? meals.filter(m => {
+    if (activeCategory === 'snacks') return m.category === 'snack1' || m.category === 'snack2';
+    return m.category === activeCategory;
+  }) : [];
+
+  const visibleMeals = showAll ? filteredMeals : filteredMeals.slice(0, 4);
 
   if (!t) return <div className="bg-black text-primary p-20 font-mono">CRITICAL_ERROR: DATA_LOAD_FAILURE</div>;
 
@@ -164,73 +191,49 @@ export default function Demo({ lang, toggleLang, goTo, user, setUser, setShowLog
         </div>
       </section>
 
-      {/* C. Menú de la Semana (Demo de 5 Días) */}
+      {/* C. Menú de la Semana (Catálogo) */}
       <section id="menu" className="py-32 px-6 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
           <div>
-            <h2 className="text-xs font-mono text-primary tracking-[0.5em] uppercase mb-4">{t.menu.label}</h2>
+            <h2 className="text-xs font-mono text-primary tracking-[0.5em] uppercase mb-4">DEPLOYMENT_CATALOG</h2>
             <h3 className="text-5xl md:text-7xl font-display font-bold uppercase">{t.menu.title}</h3>
           </div>
           
-          <div className="flex items-center gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
-            {sizes.map((s, i) => (
-              <button 
-                key={i}
-                onClick={() => setActiveSize(i)}
-                className={`px-8 py-3 rounded-lg font-mono text-xs transition-all ${activeSize === i ? 'bg-primary text-black font-black' : 'text-gray-400 hover:text-white'}`}
-              >
-                {s.letter} ({s.grams})
-              </button>
-            ))}
+          <div className="space-y-4 text-right">
+             <div className="inline-flex p-1 bg-white/5 rounded-xl border border-white/10">
+              {categories.map((cat) => (
+                <button 
+                  key={cat.id}
+                  onClick={() => {setActiveCategory(cat.id); setShowAll(false)}}
+                  className={`px-6 py-2.5 rounded-lg font-mono text-[10px] tracking-widest transition-all ${activeCategory === cat.id ? 'bg-primary text-black font-black shadow-[0_0_15px_rgba(255,215,0,0.4)]' : 'text-gray-400 hover:text-white'}`}
+                >
+                  {lang === 'es' ? cat.es : cat.en}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center justify-end gap-2 p-1 bg-white/5 rounded-xl border border-white/10 w-fit ml-auto">
+              {sizes.map((s, i) => (
+                <button key={i} onClick={() => setActiveSize(i)} className={`px-8 py-2 rounded-lg font-mono text-[10px] transition-all ${activeSize === i ? 'bg-white/10 text-primary font-black border border-primary/30' : 'text-gray-500 hover:text-white'}`}>
+                  {s.letter} ({s.grams})
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          {weeklyMenu.map((item, i) => (
-            <motion.div 
-              key={i}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className={`card-cyber flex flex-col group ${item.isCustom ? 'border-primary/50' : ''}`}
-            >
-              <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/2">
-                <span className="text-[10px] font-mono text-primary font-black uppercase">{t.menu.days[i]}</span>
-                <span className="text-xs">{item.recipe[lang as 'es'|'en'].flag}</span>
-              </div>
-              
-              <div className="relative h-48 overflow-hidden">
-                <img src={item.img} alt={item.recipe[lang as 'es'|'en'].title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60" />
-                {item.isCustom && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <span className="bg-primary text-black px-4 py-2 text-[10px] font-black uppercase tracking-widest">PRO_CONFIG_NEEDED</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="p-6 flex-1 flex flex-col">
-                <div className="text-[8px] font-mono text-gray-500 uppercase mb-1 tracking-widest">{item.recipe[lang as 'es'|'en'].country}</div>
-                <h4 className="font-display font-bold text-lg mb-2 leading-tight group-hover:text-primary transition-colors">{item.recipe[lang as 'es'|'en'].title}</h4>
-                <p className="text-[10px] text-gray-500 mb-6 font-mono uppercase">{item.recipe[lang as 'es'|'en'].desc}</p>
-                
-                {!item.isCustom && (
-                  <div className="mt-auto grid grid-cols-2 gap-2">
-                    <div className="bg-black/40 p-2 rounded border border-white/5 text-center">
-                      <div className="text-[7px] font-mono text-gray-600 uppercase">PROT</div>
-                      <div className="text-xs font-bold text-primary">{Math.round(item.protein * sizes[activeSize].multiplier)}G</div>
-                    </div>
-                    <div className="bg-black/40 p-2 rounded border border-white/5 text-center">
-                      <div className="text-[7px] font-mono text-gray-600 uppercase">KCAL</div>
-                      <div className="text-xs font-bold text-primary">{Math.round(item.kcal * sizes[activeSize].multiplier)}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div key={activeCategory} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+            <MealCatalog meals={visibleMeals} lang={lang} />
+          </motion.div>
+        </AnimatePresence>
+
+        {filteredMeals.length > 4 && (
+          <div className="mt-12 text-center">
+            <button onClick={() => setShowAll(!showAll)} className="px-10 py-4 border border-white/10 rounded-full font-mono text-xs uppercase tracking-[0.2em] hover:bg-white/5 hover:border-primary/50 transition-all text-gray-400 hover:text-primary">
+              {showAll ? 'MOSTRAR_MENOS' : `VER_TODO_EL_CATÁLOGO (${filteredMeals.length})`}
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Footer e Información de Barrio */}
