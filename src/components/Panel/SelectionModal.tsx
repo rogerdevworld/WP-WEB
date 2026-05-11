@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { X, Save, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Save, Zap, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
 import MealCard from '../MealCard';
 
 interface SelectionModalProps {
@@ -21,6 +21,8 @@ export default function SelectionModal({
   editingDay, setEditingDay, dailySelections, catalogMeals, 
   mealOptions, user, lang, handleSelection, savePlan, t, onViewDetails
 }: SelectionModalProps) {
+  const [activeCategory, setActiveCategory] = useState<string>('desayuno');
+
   if (editingDay === null) return null;
   const selection = dailySelections[editingDay] || {};
 
@@ -29,12 +31,19 @@ export default function SelectionModal({
       meals.map((m: any) => ({ ...m, id_code: m.id, category: cat, name_es: m.name.es, name_en: m.name.en, price: 5.5, protein: 25, cost: 1.2 }))
     );
 
-  const categorizedMeals = sourceData.reduce((acc: any, meal: any) => {
-    const cat = meal.category || 'other';
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(meal);
-    return acc;
-  }, {});
+  // Mapping categories for the UI
+  const categories = [
+    { id: 'desayuno', backendId: 'breakfast', label: lang === 'es' ? 'DESAYUNO' : 'BREAKFAST' },
+    { id: 'almuerzo', backendId: 'main', label: lang === 'es' ? 'ALMUERZO' : 'LUNCH' },
+    { id: 'cena', backendId: 'main', label: lang === 'es' ? 'CENA' : 'DINNER' },
+    { id: 'snack', backendId: 'snacks', label: lang === 'es' ? 'SNACK' : 'SNACK' },
+    { id: 'jugos', backendId: 'juices', label: lang === 'es' ? 'JUGOS' : 'JUICES' },
+  ];
+
+  const currentCat = categories.find(c => c.id === activeCategory);
+  const filteredMeals = sourceData.filter(m => 
+    m.category?.toLowerCase() === currentCat?.backendId?.toLowerCase()
+  );
 
   const totalPrice = Object.entries(selection).reduce((total: number, [type, ids]: any) => {
     const typePrice = ids.reduce((typeTotal: number, id: string) => {
@@ -44,78 +53,137 @@ export default function SelectionModal({
     return total + typePrice;
   }, 0);
 
+  const nextCategory = () => {
+    const currentIndex = categories.findIndex(c => c.id === activeCategory);
+    if (currentIndex < categories.length - 1) {
+      setActiveCategory(categories[currentIndex + 1].id);
+    }
+  };
+
+  const prevCategory = () => {
+    const currentIndex = categories.findIndex(c => c.id === activeCategory);
+    if (currentIndex > 0) {
+      setActiveCategory(categories[currentIndex - 1].id);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="card-cyber max-w-6xl w-full p-8 relative max-h-[90vh] flex flex-col"
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="card-cyber max-w-6xl w-full p-8 relative h-[90vh] flex flex-col overflow-hidden"
       >
-        <button onClick={() => setEditingDay(null)} className="absolute top-4 right-4 text-gray-500 hover:text-white">
+        <button onClick={() => setEditingDay(null)} className="absolute top-6 right-6 text-gray-500 hover:text-white z-50">
           <X size={24} />
         </button>
 
-        <div className="text-center mb-8 border-b border-white/5 pb-6">
+        {/* Header Section */}
+        <div className="text-center mb-8 shrink-0">
           <div className="text-[10px] font-mono text-primary tracking-[0.5em] uppercase mb-2">DEPLOYMENT_CONFIG</div>
           <h3 className="text-4xl font-display font-black uppercase text-white">
             {lang === 'es' ? 'Protocolo Día' : 'Day Protocol'} {editingDay}
           </h3>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-12 pr-4">
-          {Object.entries(categorizedMeals).map(([type, typeMeals]: any) => {
-            const currentSelections = selection[type] || [];
-            const isMultiple = currentSelections.length > 1;
-
-            return (
-              <div key={type} className="space-y-6">
-                <div className="flex justify-between items-center bg-white/2 p-4 rounded-xl border border-white/5">
-                  <div className="flex items-center gap-4">
-                     <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                     <label className="text-xs font-mono text-primary uppercase tracking-[0.3em] font-black">
-                      {(t.panel.meals as any)[type] || type}
-                    </label>
-                  </div>
-                  {isMultiple && (
-                    <span className="text-[10px] font-mono text-yellow-500 animate-pulse">
-                      {t.panel.meals.warningMultiple}
-                    </span>
+        {/* Navigation Filter Bar */}
+        <div className="flex justify-center mb-10 shrink-0">
+          <div className="inline-flex items-center p-1.5 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-xl relative overflow-hidden">
+            {categories.map((cat) => {
+              const hasSelection = selection[cat.id]?.length > 0;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`relative px-8 py-3 rounded-xl text-[10px] font-mono font-black transition-all duration-300 uppercase tracking-widest flex items-center gap-2 ${
+                    activeCategory === cat.id ? 'text-black' : (hasSelection ? 'text-primary' : 'text-gray-500 hover:text-white')
+                  }`}
+                >
+                  {activeCategory === cat.id && (
+                    <motion.div
+                      layoutId="activeSelectionTab"
+                      className="absolute inset-0 bg-primary rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                    />
                   )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {typeMeals.map((meal: any) => {
-                    const userSizeMultiplier = user?.tupper_size === 'S' ? 0.8 : user?.tupper_size === 'L' ? 1.3 : 1;
-                    return (
-                      <MealCard
-                        key={meal.id_code}
-                        meal={meal}
-                        lang={lang}
-                        isCompact={true}
-                        isSelected={currentSelections.includes(meal.id_code)}
-                        onSelect={() => handleSelection(editingDay, type, meal.id_code)}
-                        onViewDetails={onViewDetails}
-                        sizeMultiplier={userSizeMultiplier}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+                  <span className="relative z-10">{cat.label}</span>
+                  {hasSelection && activeCategory !== cat.id && (
+                    <CheckCircle2 size={12} className="relative z-10 text-primary" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
-          <div className="bg-white/5 px-6 py-3 rounded-xl border border-white/10">
-             <div className="text-[8px] font-mono text-gray-500 uppercase tracking-widest mb-1">MONTO_DIARIO_ESTIMADO</div>
-             <div className="text-2xl font-display font-black text-primary">{totalPrice.toFixed(2)}€</div>
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 mb-8">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeCategory}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {filteredMeals.length === 0 ? (
+                <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/2">
+                   <p className="text-gray-500 font-mono text-sm tracking-widest animate-pulse">CARGANDO_OPCIONES_DE_{activeCategory.toUpperCase()}...</p>
+                </div>
+              ) : filteredMeals.map((meal: any) => {
+                const userSizeMultiplier = user?.tupper_size === 'S' ? 0.8 : user?.tupper_size === 'L' ? 1.3 : 1;
+                const isSelected = selection[activeCategory]?.includes(meal.id_code);
+                
+                return (
+                  <MealCard
+                    key={meal.id_code}
+                    meal={meal}
+                    lang={lang}
+                    isCompact={true}
+                    isSelected={isSelected}
+                    onSelect={() => handleSelection(editingDay, activeCategory, meal.id_code)}
+                    onViewDetails={onViewDetails}
+                    sizeMultiplier={userSizeMultiplier}
+                  />
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Navigation & Action Footer */}
+        <div className="mt-auto pt-8 border-t border-white/5 flex justify-between items-center shrink-0">
+          <div className="flex gap-4">
+            <button 
+              onClick={prevCategory}
+              disabled={activeCategory === categories[0].id}
+              className="p-4 bg-white/5 border border-white/10 rounded-xl text-white disabled:opacity-20 hover:bg-primary/20 hover:text-primary transition-all"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button 
+              onClick={nextCategory}
+              disabled={activeCategory === categories[categories.length - 1].id}
+              className="p-4 bg-white/5 border border-white/10 rounded-xl text-white disabled:opacity-20 hover:bg-primary/20 hover:text-primary transition-all"
+            >
+              <ChevronRight size={24} />
+            </button>
           </div>
-          <button 
-            onClick={() => savePlan(editingDay)}
-            className="px-10 py-4 bg-primary text-black font-display font-black uppercase text-sm tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-[0_0_30px_rgba(255,215,0,0.3)]"
-          >
-            <Save size={18} />
-            {lang === 'es' ? 'CONFIRMAR CARGA DIARIA' : 'CONFIRM DAILY LOAD'}
-          </button>
+
+          <div className="flex items-center gap-6">
+            <div className="bg-white/5 px-8 py-3 rounded-xl border border-white/10 text-right">
+               <div className="text-[8px] font-mono text-gray-500 uppercase tracking-widest mb-1">TOTAL_DIARIO_PROTOCOLO</div>
+               <div className="text-2xl font-display font-black text-primary">{totalPrice.toFixed(2)}€</div>
+            </div>
+            <button 
+              onClick={() => savePlan(editingDay)}
+              className="px-12 py-5 bg-primary text-black font-display font-black uppercase text-sm tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-[0_0_30px_rgba(255,215,0,0.3)]"
+            >
+              <Save size={20} />
+              {lang === 'es' ? 'FINALIZAR CARGA' : 'FINALIZE LOAD'}
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>

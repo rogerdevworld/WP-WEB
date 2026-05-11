@@ -75,9 +75,10 @@ export default function MealCard({ meal, lang, isSelected, onSelect, onViewDetai
               </div>
             </div>
             <div className="text-right">
-              <div className="flex gap-[1px] justify-end mb-2 h-3 opacity-60">
-                {[2, 1, 3, 1, 2, 4, 1, 2, 1, 3, 2, 1].map((w, i) => (
-                  <div key={i} className="bg-white h-full" style={{ width: `${w}px` }} />
+              <div className="flex gap-[1.5px] justify-end items-end mb-2 h-8 opacity-60">
+                {/* Chef Hat Shape Barcode */}
+                {[4, 4, 10, 10, 14, 14, 16, 16, 14, 14, 10, 10, 4, 4].map((h, i) => (
+                  <div key={i} className="bg-white" style={{ width: i % 3 === 0 ? '3px' : '1.5px', height: `${h * 2}px` }} />
                 ))}
               </div>
               <div className="text-[9px] font-mono text-white/40 tracking-tighter truncate max-w-[100px] uppercase">

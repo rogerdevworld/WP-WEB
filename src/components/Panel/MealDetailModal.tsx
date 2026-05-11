@@ -9,6 +9,15 @@ interface MealDetailModalProps {
 }
 
 export default function MealDetailModal({ meal, onClose, lang }: MealDetailModalProps) {
+  // ESC key support
+  React.useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
   const name = lang === 'es' ? (meal.name_es || meal.name?.es) : (meal.name_en || meal.name?.en);
   const description = lang === 'es' ? meal.description_es : meal.description_en;
 
@@ -133,6 +142,7 @@ export default function MealDetailModal({ meal, onClose, lang }: MealDetailModal
               </div>
             </div>
         </div>
+
       </motion.div>
     </div>
   );
