@@ -79,30 +79,54 @@ export default function FeedbackModal({
 
         {/* Content Section (Rest of the Form) */}
         <div className="p-8 space-y-8 bg-black/40">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { label: 'Sal', key: 'salt_rating' },
-              { label: 'Pimienta', key: 'pepper_rating' },
-              { label: 'Azúcar', key: 'sugar_rating' }
-            ].map(stat => (
-              <div key={stat.key} className="space-y-3">
-                <label className="text-[8px] font-mono text-gray-500 uppercase tracking-widest block text-center">{stat.label}</label>
-                <div className="relative h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${((feedbackForm as any)[stat.key] / 5) * 100}%` }}
-                    className="absolute inset-y-0 left-0 bg-primary shadow-[0_0_10px_rgba(255,215,0,0.4)]"
-                  />
-                  <input 
-                    type="range" min="1" max="5" 
-                    value={(feedbackForm as any)[stat.key]}
-                    onChange={(e) => setFeedbackForm({...feedbackForm, [stat.key]: parseInt(e.target.value)})}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                  />
-                </div>
-                <div className="text-[10px] font-mono text-center text-primary font-black tracking-widest uppercase">LVL_{ (feedbackForm as any)[stat.key] }</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {currentFeedback.meal.flavor_profile === 'sweet' ? (
+              // Sweet Profile: Only Sugar
+              <div className="col-span-full space-y-4">
+                <label className="text-[8px] font-mono text-gray-500 uppercase tracking-widest block text-center">Balance de Azúcar</label>
+                <button 
+                  onClick={() => setFeedbackForm({...feedbackForm, sugar_rating: feedbackForm.sugar_rating === 3 ? 1 : 3})}
+                  className={`w-full py-4 rounded-xl border-2 transition-all duration-500 font-mono font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-3 ${
+                    feedbackForm.sugar_rating === 3 
+                      ? 'bg-green-500/10 border-green-500/50 text-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]' 
+                      : 'bg-red-500/10 border-red-500/50 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                  }`}
+                >
+                  <div className={`w-3 h-3 rounded-full ${feedbackForm.sugar_rating === 3 ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                  {feedbackForm.sugar_rating === 3 ? 'Punto de Azúcar Perfecto' : 'Demasiado / Poco Dulce'}
+                </button>
               </div>
-            ))}
+            ) : (
+              // Savory Profile: Salt & Pepper
+              <>
+                <div className="space-y-4">
+                  <label className="text-[8px] font-mono text-gray-500 uppercase tracking-widest block text-center">Punto de Sal</label>
+                  <button 
+                    onClick={() => setFeedbackForm({...feedbackForm, salt_rating: feedbackForm.salt_rating === 3 ? 1 : 3})}
+                    className={`w-full py-4 rounded-xl border-2 transition-all duration-500 font-mono font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 ${
+                      feedbackForm.salt_rating === 3 
+                        ? 'bg-green-500/10 border-green-500/50 text-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]' 
+                        : 'bg-red-500/10 border-red-500/50 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                    }`}
+                  >
+                    {feedbackForm.salt_rating === 3 ? 'Sal: Correcta' : 'Sal: Incorrecta'}
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <label className="text-[8px] font-mono text-gray-500 uppercase tracking-widest block text-center">Toque de Pimienta</label>
+                  <button 
+                    onClick={() => setFeedbackForm({...feedbackForm, pepper_rating: feedbackForm.pepper_rating === 3 ? 1 : 3})}
+                    className={`w-full py-4 rounded-xl border-2 transition-all duration-500 font-mono font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 ${
+                      feedbackForm.pepper_rating === 3 
+                        ? 'bg-green-500/10 border-green-500/50 text-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]' 
+                        : 'bg-red-500/10 border-red-500/50 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                    }`}
+                  >
+                    {feedbackForm.pepper_rating === 3 ? 'Pimienta: OK' : 'Pimienta: Mal'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="space-y-3">

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Timer, CreditCard, Droplets, Zap, Calendar as CalendarIcon, CheckCircle2, Plus, Activity, Scale, ShieldCheck } from 'lucide-react';
+import { Timer, CreditCard, Droplets, Zap, Calendar as CalendarIcon, CheckCircle2, Plus, Activity, Scale, ShieldCheck, AlertTriangle, Package, Truck, Check } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import RadarChart from './RadarChart';
 import { Target } from 'lucide-react';
@@ -16,21 +16,57 @@ interface DashboardTabProps {
   chartData: any[];
   user: any;
   catalogMeals: any[];
+  onSwitchTab?: (tab: string) => void;
+  cards: any[];
 }
 
 export default function DashboardTab({ 
   selectedDays, monthName, daysInMonth, firstDow, dailySelections, 
-  toggleDay, setEditingDay, chartData, user, catalogMeals 
+  toggleDay, setEditingDay, chartData, user, catalogMeals, onSwitchTab, cards
 }: DashboardTabProps) {
   
+  const [isPaid, setIsPaid] = useState(false);
+  const [shippingStage, setShippingStage] = useState(0);
+  const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id || '');
+  const isProfileIncomplete = !user?.phone || !user?.birth_date || !user?.height;
   const today = new Date().getDate();
+
+  const handlePayment = () => {
+    if (!selectedCardId && cards.length === 0) {
+      alert("CRITICAL_ERROR: No se detectan métodos de Bio-Pago. Sincroniza una tarjeta en la pestaña de Suscripción.");
+      onSwitchTab?.('billing');
+      return;
+    }
+    setIsPaid(true);
+    // Start automated logistics protocol simulation
+    let stage = 1;
+    setShippingStage(stage);
+    const interval = setInterval(() => {
+      stage += 1;
+      setShippingStage(prev => {
+        if (prev >= 5) {
+          clearInterval(interval);
+          return 5;
+        }
+        return prev + 1;
+      });
+    }, 3000);
+  };
+
+  const shippingSteps = [
+    { label: 'Bio-Prep', icon: <Activity size={16} />, status: shippingStage >= 1 ? (shippingStage === 1 ? 'active' : 'completed') : 'pending' },
+    { label: 'Empaquetado', icon: <Package size={16} />, status: shippingStage >= 2 ? (shippingStage === 2 ? 'active' : 'completed') : 'pending' },
+    { label: 'Bio-Calidad', icon: <ShieldCheck size={16} />, status: shippingStage >= 3 ? (shippingStage === 3 ? 'active' : 'completed') : 'pending' },
+    { label: 'Tránsito', icon: <Truck size={16} />, status: shippingStage >= 4 ? (shippingStage === 4 ? 'active' : 'completed') : 'pending' },
+    { label: 'Entregado', icon: <Check size={16} />, status: shippingStage >= 5 ? 'completed' : 'pending' },
+  ];
 
   const calculateDayPrice = (daySelections: any) => {
     let total = 0;
     Object.values(daySelections).forEach((ids: any) => {
       ids.forEach((id: string) => {
         const meal = catalogMeals.find(m => m.id_code === id);
-        if (meal) total += parseFloat(meal.price);
+        if (meal) total += parseFloat(meal.price || 0);
       });
     });
     return total;
@@ -58,6 +94,31 @@ export default function DashboardTab({
 
   return (
     <div className="space-y-12">
+      {/* PROFILE_COMPLETION_ALERT */}
+      {isProfileIncomplete && (
+        <motion.div 
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          className="bg-primary/10 border border-primary/30 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-6 overflow-hidden"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary animate-pulse">
+               <AlertTriangle size={24} />
+            </div>
+            <div>
+               <h4 className="text-sm font-mono font-black text-primary uppercase tracking-widest">Protocolo de Perfil Incompleto</h4>
+               <p className="text-[10px] font-mono text-gray-500 uppercase">Faltan datos biométricos para optimizar tus recomendaciones nutricionales.</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => onSwitchTab?.('settings')}
+            className="px-6 py-3 bg-primary text-black font-mono font-black text-[10px] uppercase rounded-xl hover:scale-105 transition-all shadow-[0_0_15px_rgba(255,215,0,0.3)]"
+          >
+            Completar Bio-Formulario
+          </button>
+        </motion.div>
+      )}
+
       {/* Top KPI Section (4 Cards) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {/* Card 1: Time & Capital */}
@@ -148,19 +209,13 @@ export default function DashboardTab({
           {/* Active Progress Fill */}
           <motion.div 
             initial={{ width: '0%' }}
-            animate={{ width: '75%' }}
-            transition={{ duration: 3, ease: "easeInOut" }}
+            animate={{ width: `${(Math.max(0, shippingStage - 1) / 4) * 100}%` }}
+            transition={{ duration: 1, ease: "easeInOut" }}
             className="absolute top-1/2 left-0 h-[2px] bg-gradient-to-r from-primary to-green-500 -translate-y-1/2 shadow-[0_0_15px_#FFD700]"
           />
 
           <div className="relative flex justify-between">
-            {[
-              { id: 1, label: 'PREPARACIÓN', icon: <Activity size={16} />, status: 'completed' },
-              { id: 2, label: 'EMPAQUETADO', icon: <Zap size={16} />, status: 'completed' },
-              { id: 3, label: 'CALIDAD_CHECK', icon: <ShieldCheck size={16} />, status: 'active' },
-              { id: 4, label: 'EN_CAMINO', icon: <CreditCard size={16} />, status: 'pending' },
-              { id: 5, label: 'ENTREGADO', icon: <CheckCircle2 size={16} />, status: 'pending' }
-            ].map((step, i) => (
+            {shippingSteps.map((step, i) => (
               <div key={i} className="flex flex-col items-center gap-4 relative z-10">
                 <motion.div 
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -265,23 +320,46 @@ export default function DashboardTab({
             {/* PAYMENT_GATEWAY_SECTION */}
             {selectedDays.size > 0 && (
               <div className="mt-8 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                    <CreditCard size={24} />
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Total Acumulado</div>
-                    <div className="text-2xl font-display font-black text-white">
-                      {Array.from(selectedDays).reduce((acc, day) => acc + calculateDayPrice(dailySelections[day] || {}), 0).toFixed(2)}€
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  <div className="flex items-center gap-4 pr-6 border-r border-white/10">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                      <CreditCard size={24} />
                     </div>
+                    <div>
+                      <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Total Acumulado</div>
+                      <div className="text-2xl font-display font-black text-white">
+                        {Array.from(selectedDays).reduce((acc, day) => acc + calculateDayPrice(dailySelections[day] || {}), 0).toFixed(2)}€
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[8px] font-mono text-gray-500 uppercase tracking-widest ml-1">Método de Bio-Pago</label>
+                    <select 
+                      value={selectedCardId} 
+                      onChange={(e) => setSelectedCardId(e.target.value)}
+                      className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[10px] font-mono text-white outline-none focus:border-primary transition-all min-w-[200px] appearance-none"
+                    >
+                      {cards.length === 0 ? (
+                        <option value="">SIN TARJETAS ACTIVAS</option>
+                      ) : (
+                        cards.map(c => (
+                          <option key={c.id} value={c.id}>{c.brand} •••• {c.last4}</option>
+                        ))
+                      )}
+                    </select>
                   </div>
                 </div>
                 
-                <button className="btn-cyber-primary py-4 px-10 flex items-center gap-3 group overflow-hidden relative">
+                <button 
+                  onClick={handlePayment}
+                  disabled={isPaid || selectedDays.size === 0}
+                  className={`btn-cyber-primary py-4 px-10 flex items-center gap-3 group overflow-hidden relative ${isPaid ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+                >
                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-                  <span className="relative z-10 flex items-center gap-3">
-                    <Zap size={16} fill="currentColor" />
-                    PAGAR Y ACTIVAR PLAN
+                  <span className="relative z-10 flex items-center gap-3 font-black">
+                    {isPaid ? <Check size={16} /> : <Zap size={16} fill="currentColor" />}
+                    {isPaid ? 'PAGO PROCESADO_OK' : 'PAGAR Y ACTIVAR PROTOCOLO'}
                   </span>
                 </button>
               </div>

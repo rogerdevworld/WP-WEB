@@ -26,7 +26,7 @@ const chartData = [
   { name: 'Dom', weight: 78.1, fat: 14.2, water: 2.0 },
 ];
 
-function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelectedDays }: any) {
+function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelectedDays, onLogout }: any) {
   const t = i18n[lang as 'es' | 'en'];
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -40,6 +40,10 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
   const [currentFeedback, setCurrentFeedback] = useState<any>(null);
   const [mealHistory, setMealHistory] = useState<any[]>([]);
   const [mealPlans, setMealPlans] = useState<any[]>([]);
+  const [cards, setCards] = useState<any[]>([
+    { id: '1', last4: '4412', exp: '12/28', brand: 'VISA' }
+  ]);
+  const [selectedPlan, setSelectedPlan] = useState('PLATINO_VIP');
   
   const [feedbackForm, setFeedbackForm] = useState({
     rating: 5, salt_rating: 3, pepper_rating: 3, sugar_rating: 3,
@@ -286,7 +290,7 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
         </div>
 
         <div className="mt-auto p-8 border-t border-white/5">
-          <button onClick={() => { setUser(null); goTo('demo') }} className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all text-xs font-mono uppercase tracking-widest">
+          <button onClick={onLogout} className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all text-xs font-mono uppercase tracking-widest">
             <LogOut size={18} /> {t.panel.logout}
           </button>
         </div>
@@ -366,7 +370,13 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
         <main className="p-8 max-w-7xl mx-auto">
           {activeTab === 'dashboard' && (
             <div>
-              <DashboardTab selectedDays={selectedDays} monthName={monthName} daysInMonth={daysInMonth} firstDow={firstDow} dailySelections={dailySelections} toggleDay={toggleDay} setEditingDay={setEditingDay} chartData={chartData} user={user} catalogMeals={catalogMeals} />
+              <DashboardTab 
+                selectedDays={selectedDays} monthName={monthName} daysInMonth={daysInMonth} 
+                firstDow={firstDow} dailySelections={dailySelections} toggleDay={toggleDay} 
+                setEditingDay={setEditingDay} chartData={chartData} user={user} 
+                catalogMeals={catalogMeals} onSwitchTab={setActiveTab}
+                cards={cards}
+              />
               
               {/* REFERRAL_PROGRAM_BAR */}
               <div className="card-cyber p-6 bg-gradient-to-r from-primary/10 to-transparent border-primary/20 flex flex-col md:flex-row justify-between items-center gap-6 mt-12 overflow-hidden relative group">
@@ -397,9 +407,32 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
               </div>
             </div>
           )}
-          {activeTab === 'menu' && <div className="space-y-12"><div className="text-center"><div className="text-[10px] font-mono text-primary tracking-[0.5em] uppercase mb-4">BIO_CATALOG_SYNC</div><h2 className="text-5xl font-display font-black uppercase text-white">Catálogo de Alto Rendimiento</h2></div><MealCatalog meals={catalogMeals} lang={lang} sizeMultiplier={user?.tupper_size === 'S' ? 0.8 : user?.tupper_size === 'L' ? 1.3 : 1} onViewDetails={setSelectedMealForDetails} /></div>}
+          {activeTab === 'menu' && (
+            <div className="space-y-12">
+              <div className="text-center">
+                <div className="text-[10px] font-mono text-primary tracking-[0.5em] uppercase mb-4">BIO_CATALOG_SYNC</div>
+                <h2 className="text-5xl font-display font-black uppercase text-white">Catálogo de Alto Rendimiento</h2>
+              </div>
+              <MealCatalog 
+                meals={catalogMeals} 
+                lang={lang} 
+                user={user}
+                sizeMultiplier={user?.tupper_size === 'S' ? 0.8 : user?.tupper_size === 'L' ? 1.3 : 1} 
+                onViewDetails={setSelectedMealForDetails} 
+              />
+            </div>
+          )}
           {activeTab === 'history' && <HistoryTab mealHistory={mealHistory} onViewDetails={setSelectedMealForDetails} onEvaluate={setCurrentFeedback} />}
-          {activeTab === 'billing' && <BillingTab user={user} selectedDays={selectedDays} />}
+          {activeTab === 'billing' && (
+            <BillingTab 
+              user={user} 
+              selectedDays={selectedDays} 
+              cards={cards} 
+              setCards={setCards}
+              selectedPlan={selectedPlan}
+              setSelectedPlan={setSelectedPlan}
+            />
+          )}
           {activeTab === 'settings' && <SettingsTab user={user} settingsForm={settingsForm} setSettingsForm={setSettingsForm} fileInputRef={fileInputRef} updateProfile={updateProfile} isUpdating={isUpdating} t={t} />}
         </main>
       </div>

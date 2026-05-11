@@ -2,22 +2,35 @@ import React, { useState } from 'react';
 import MealCard from './MealCard';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function MealCatalog({ meals, lang, limit, sizeMultiplier, onViewDetails }: { meals: any[], lang: string, limit?: number, sizeMultiplier?: number, onViewDetails?: (meal: any) => void }) {
+export default function MealCatalog({ meals, lang, limit, sizeMultiplier, onViewDetails, user }: { meals: any[], lang: string, limit?: number, sizeMultiplier?: number, onViewDetails?: (meal: any) => void, user?: any }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
   const categories = [
     { id: 'ALL', label: lang === 'es' ? 'TODO' : 'ALL' },
     { id: 'breakfast', label: lang === 'es' ? 'DESAYUNO' : 'BREAKFAST' },
-    { id: 'main', label: lang === 'es' ? 'ALMUERZO/CENA' : 'LUNCH/DINNER' },
+    { id: 'lunch', label: lang === 'es' ? 'ALMUERZO' : 'LUNCH' },
+    { id: 'dinner', label: lang === 'es' ? 'CENA' : 'DINNER' },
     { id: 'snack', label: lang === 'es' ? 'SNACK' : 'SNACK' },
     { id: 'juices', label: lang === 'es' ? 'JUGOS' : 'JUICES' },
   ];
+
+  const checkIsRecommended = (meal: any) => {
+    if (!user) return false;
+    const kcal = parseFloat(meal.kcal || 0);
+    const protein = parseFloat(meal.protein || 0);
+    const isLoss = (parseFloat(user.weight) || 0) > (parseFloat(user.target_weight) || 0);
+    const isGain = (parseFloat(user.weight) || 0) < (parseFloat(user.target_weight) || 0);
+
+    if (isLoss && kcal < 500) return true;
+    if (isGain && kcal > 600) return true;
+    if (protein > 35) return true;
+    return false;
+  };
 
   const filteredMeals = selectedCategory === 'ALL' 
     ? meals 
     : meals.filter(m => {
         const cat = m.category?.toLowerCase();
-        if (selectedCategory === 'main') return cat === 'lunch' || cat === 'dinner';
         return cat === selectedCategory.toLowerCase();
       });
 
@@ -81,6 +94,7 @@ export default function MealCatalog({ meals, lang, limit, sizeMultiplier, onView
                   lang={lang} 
                   sizeMultiplier={sizeMultiplier}
                   onViewDetails={onViewDetails}
+                  isRecommended={checkIsRecommended(meal)}
                 />
               </motion.div>
             ))}

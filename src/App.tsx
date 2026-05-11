@@ -23,6 +23,7 @@ export default function App() {
   const [phone, setPhone] = useState('')
   const [height, setHeight] = useState('')
   const [weight, setWeight] = useState('')
+  const [referralCode, setReferralCode] = useState('')
 
   // Persistence (Safe loading + Re-fetch)
   useEffect(() => {
@@ -76,7 +77,9 @@ export default function App() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     const endpoint = isRegistering ? '/api/register' : '/api/login'
-    const payload = isRegistering ? { email, password, name, phone, height: height || null, weight: weight || null } : { email, password }
+    const payload = isRegistering 
+      ? { email, password, name, phone, height: height || null, weight: weight || null, referral_code: referralCode } 
+      : { email, password }
 
     try {
       const response = await fetch(endpoint, {
@@ -183,6 +186,10 @@ export default function App() {
                       <div className="space-y-1">
                         <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Weight (KG)</label>
                         <input type="number" value={weight} onChange={e=>setWeight(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white" placeholder="KG" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Bio-Coupon (Optional)</label>
+                        <input type="text" value={referralCode} onChange={e=>setReferralCode(e.target.value)} className="w-full bg-primary/5 border border-primary/20 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-primary" placeholder="CUPÓN / REF_ID" />
                       </div>
                     </div>
                   </>

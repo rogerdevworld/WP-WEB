@@ -10,9 +10,13 @@ interface MealCardProps {
   onViewDetails?: (meal: any) => void;
   isCompact?: boolean;
   sizeMultiplier?: number;
+  isRecommended?: boolean;
 }
 
-export default function MealCard({ meal, lang, isSelected, onSelect, onViewDetails, isCompact, sizeMultiplier = 1 }: MealCardProps) {
+export default function MealCard({ 
+  meal, lang, isSelected, onSelect, onViewDetails, isCompact, 
+  sizeMultiplier = 1, isRecommended 
+}: MealCardProps) {
   if (!meal) return null;
 
   const name = lang === 'es' ? (meal.name_es || meal.name?.es || 'BIO_FUEL') : (meal.name_en || meal.name?.en || 'BIO_FUEL');
@@ -57,6 +61,11 @@ export default function MealCard({ meal, lang, isSelected, onSelect, onViewDetai
             <div className="flex items-center gap-2 px-3 py-1 bg-primary/20 border border-primary/50 backdrop-blur-md text-primary text-[8px] font-mono rounded-full uppercase tracking-widest">
                <ShieldCheck size={10} /> BIO_SAFE
             </div>
+            {isRecommended && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/50 backdrop-blur-md text-green-500 text-[8px] font-mono rounded-full uppercase tracking-widest animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.3)]">
+                 <CheckCircle2 size={10} /> RECOMENDADO PARA MÍ
+              </div>
+            )}
             <div className="flex items-center gap-2 px-3 py-1 bg-black/60 border border-white/10 backdrop-blur-md text-white text-[8px] font-mono rounded-full opacity-0 group-hover:opacity-100 transition-all uppercase tracking-widest">
                <Activity size={10} /> SYNC_OK
             </div>
