@@ -2,6 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Timer, CreditCard, Droplets, Zap, Calendar as CalendarIcon, CheckCircle2, Plus, Activity, Scale } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
+import RadarChart from './RadarChart';
+import { Target } from 'lucide-react';
 
 interface DashboardTabProps {
   selectedDays: Set<number>;
@@ -151,17 +153,18 @@ export default function DashboardTab({
           </div>
         </div>
 
-        {/* Right Column: Bio-Chart (4 Cols) */}
-        <div className="lg:col-span-4 space-y-8">
-          <div className="card-cyber p-8 h-full flex flex-col">
-            <div className="flex justify-between items-center mb-8">
+        {/* Right Column: Bio-Chart & Radar (4 Cols) */}
+        <div className="lg:col-span-4 flex flex-col gap-8">
+          {/* Top: Weight/Fat Tracking */}
+          <div className="card-cyber p-8 bg-black/40 backdrop-blur-xl border border-white/5">
+            <div className="flex justify-between items-center mb-6">
               <h3 className="text-[10px] font-mono text-primary tracking-widest uppercase flex items-center gap-2">
                 <Activity size={14} /> Bio-Status Tracking
               </h3>
-              <div className="px-2 py-1 bg-green-500/20 rounded text-[8px] font-mono text-green-500 uppercase">Sync_Active</div>
+              <div className="px-2 py-0.5 bg-green-500/10 rounded text-[7px] font-mono text-green-500 uppercase border border-green-500/20">Sync_Active</div>
             </div>
 
-            <div className="flex-1 min-h-[300px]">
+            <div className="h-[180px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <defs>
@@ -171,30 +174,54 @@ export default function DashboardTab({
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                  <XAxis dataKey="name" stroke="#555" fontSize={10} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="name" stroke="#444" fontSize={8} axisLine={false} tickLine={false} />
                   <YAxis hide />
                   <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333', fontSize: '10px', borderRadius: '8px' }} itemStyle={{ color: '#FFD700' }} />
                   <Area type="monotone" dataKey="weight" stroke="#FFD700" fillOpacity={1} fill="url(#colorWeight)" strokeWidth={3} />
-                  <Area type="monotone" dataKey="fat" stroke="#00FF00" fillOpacity={0.1} fill="#00FF00" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
 
-            <div className="mt-8 space-y-4">
-              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
-                <div className="flex items-center gap-3">
-                  <Scale size={14} className="text-primary" />
-                  <span className="text-[10px] font-mono uppercase text-gray-400">Peso Promedio</span>
-                </div>
-                <span className="text-sm font-bold">{user?.weight || '78.5'} kg</span>
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex flex-col gap-1">
+                <span className="text-[8px] font-mono uppercase text-gray-500">Peso Actual</span>
+                <span className="text-sm font-bold text-white">{user?.weight || '78.5'} KG</span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
-                <div className="flex items-center gap-3">
-                  <Activity size={14} className="text-green-500" />
-                  <span className="text-[10px] font-mono uppercase text-gray-400">Grasa Corporal</span>
-                </div>
-                <span className="text-sm font-bold">14.2%</span>
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex flex-col gap-1">
+                <span className="text-[8px] font-mono uppercase text-gray-500">Objetivo</span>
+                <span className="text-sm font-bold text-primary">{user?.target_weight || '75.0'} KG</span>
               </div>
+            </div>
+          </div>
+
+          {/* Bottom: Nutritional Radar Chart */}
+          <div className="card-cyber p-8 bg-black/40 backdrop-blur-xl border border-white/5 flex-1 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-[10px] font-mono text-primary tracking-widest uppercase flex items-center gap-2">
+                <Target size={14} /> Bio-Compliance
+              </h3>
+              <div className="text-[8px] font-mono text-gray-500 uppercase">Analysis_V2.0</div>
+            </div>
+
+            <div className="flex-1 flex items-center justify-center py-4">
+              <RadarChart data={[
+                { label: 'Proteína', actual: 85, target: 90 },
+                { label: 'Carbo', actual: 60, target: 70 },
+                { label: 'Grasas', actual: 40, target: 50 },
+                { label: 'Vitaminas', actual: 95, target: 80 },
+                { label: 'Fibra', actual: 70, target: 85 },
+                { label: 'Calorías', actual: 80, target: 95 },
+              ]} />
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <div className="flex items-center gap-2 mb-2">
+                 <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_#FFD700]" />
+                 <span className="text-[8px] font-mono text-gray-400 uppercase">Estado Nutricional: Óptimo</span>
+              </div>
+              <p className="text-[9px] text-gray-500 font-mono leading-relaxed">
+                Nivel de micronutrientes superior al 80%. Se recomienda aumentar ingesta de Carbohidratos complejos para el entrenamiento de mañana.
+              </p>
             </div>
           </div>
         </div>
