@@ -9,17 +9,24 @@ interface BillingTabProps {
   setCards: (cards: any[]) => void;
   selectedPlan: string;
   setSelectedPlan: (plan: string) => void;
+  subscriptions: any[];
+  onUpgrade: (planName: string, price: number) => void;
 }
 
-export default function BillingTab({ user, selectedDays, cards, setCards, selectedPlan, setSelectedPlan }: BillingTabProps) {
+export default function BillingTab({ 
+  user, selectedDays, cards, setCards, selectedPlan, setSelectedPlan, 
+  subscriptions, onUpgrade 
+}: BillingTabProps) {
   const [showAddCard, setShowAddCard] = useState(false);
   const [showChangePlan, setShowChangePlan] = useState(false);
   const [newCard, setNewCard] = useState({ number: '', exp: '', cvc: '' });
 
+  const activeSubscription = subscriptions.find(s => s.is_active);
+
   const plans = [
-    { id: 'BIO_BASIC', name: 'BIO_BASIC', price: '49', features: ['5 Protocolos', 'Tupper M', 'Rastreo Básico'] },
-    { id: 'BIO_PRO', name: 'BIO_PRO', price: '99', features: ['15 Protocolos', 'Tupper L', 'Rastreo Premium'] },
-    { id: 'PLATINO_VIP', name: 'PLATINO_VIP', price: '199', features: ['Ilimitado', 'Tupper XL', 'Asistente AI'] },
+    { id: 'BIO_BASIC', name: 'BIO_BASIC', price: 49, features: ['5 Protocolos', 'Tupper M', 'Rastreo Básico'] },
+    { id: 'BIO_PRO', name: 'BIO_PRO', price: 99, features: ['15 Protocolos', 'Tupper L', 'Rastreo Premium'] },
+    { id: 'PLATINO_VIP', name: 'PLATINO_VIP', price: 199, features: ['Ilimitado', 'Tupper XL', 'Asistente AI'] },
   ];
 
   const handleAddCard = (e: React.FormEvent) => {
@@ -32,6 +39,12 @@ export default function BillingTab({ user, selectedDays, cards, setCards, select
 
   const removeCard = (id: string) => {
     setCards(cards.filter(c => c.id !== id));
+  };
+
+  const handlePlanUpgrade = (plan: any) => {
+    onUpgrade(plan.name, plan.price);
+    setSelectedPlan(plan.id);
+    setShowChangePlan(false);
   };
 
   return (
@@ -49,8 +62,12 @@ export default function BillingTab({ user, selectedDays, cards, setCards, select
               <Zap size={32} />
             </div>
             <div className="text-right">
-              <div className="text-[10px] font-mono text-primary uppercase tracking-widest mb-1">Status: Active</div>
-              <div className="text-2xl font-display font-black">{selectedPlan}</div>
+              <div className="text-[10px] font-mono text-primary uppercase tracking-widest mb-1">
+                Status: {activeSubscription ? 'Active' : 'No Sub'}
+              </div>
+              <div className="text-2xl font-display font-black">
+                {activeSubscription?.plan_name || selectedPlan}
+              </div>
             </div>
           </div>
           <div className="space-y-4 mb-8">
@@ -63,8 +80,10 @@ export default function BillingTab({ user, selectedDays, cards, setCards, select
               <span className="text-white font-black">{selectedDays.size} Activos</span>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-400 font-mono uppercase">Siguiente Renovación</span>
-              <span className="text-white font-black">01 JUN 2026</span>
+              <span className="text-gray-400 font-mono uppercase">Renovación</span>
+              <span className="text-white font-black">
+                {activeSubscription ? activeSubscription.end_date : 'N/A'}
+              </span>
             </div>
           </div>
           <button 
@@ -104,11 +123,31 @@ export default function BillingTab({ user, selectedDays, cards, setCards, select
           </div>
           
           <div className="space-y-4 mt-8">
-            <button className="w-full py-4 bg-primary text-black rounded-xl text-xs font-mono font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-all">Ver Facturas Recientes</button>
             <button className="w-full py-4 bg-red-500/10 border border-red-500/20 rounded-xl text-xs font-mono font-black uppercase tracking-widest text-red-500 hover:bg-red-500/20 transition-all">Pausar Bio-Suscripción</button>
           </div>
         </div>
       </div>
+
+      {/* Subscription History */}
+      {subscriptions.length > 0 && (
+        <div className="card-cyber p-8">
+           <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest mb-6">Historial de Protocolos</h3>
+           <div className="space-y-4">
+              {subscriptions.map(sub => (
+                <div key={sub.id} className="flex justify-between items-center p-4 border border-white/5 rounded-xl bg-white/2">
+                   <div className="flex items-center gap-4">
+                      <div className={`w-2 h-2 rounded-full ${sub.is_active ? 'bg-green-500 animate-pulse' : 'bg-gray-700'}`} />
+                      <div className="text-sm font-black text-white">{sub.plan_name}</div>
+                   </div>
+                   <div className="text-right">
+                      <div className="text-[10px] font-mono text-white">{sub.price}€</div>
+                      <div className="text-[8px] font-mono text-gray-500">{sub.start_date} - {sub.end_date}</div>
+                   </div>
+                </div>
+              ))}
+           </div>
+        </div>
+      )}
 
       {/* Add Card Modal */}
       <AnimatePresence>
@@ -139,7 +178,7 @@ export default function BillingTab({ user, selectedDays, cards, setCards, select
               <h3 className="text-3xl font-display font-black text-white uppercase mb-12 text-center tracking-widest">Protocolos de Suscripción</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {plans.map(plan => (
-                  <div key={plan.id} className={`p-8 rounded-3xl border-2 transition-all cursor-pointer ${selectedPlan === plan.id ? 'border-primary bg-primary/5 shadow-[0_0_30px_rgba(255,215,0,0.15)]' : 'border-white/10 hover:border-white/20 bg-white/2'}`} onClick={() => { setSelectedPlan(plan.id); setShowChangePlan(false); }}>
+                  <div key={plan.id} className={`p-8 rounded-3xl border-2 transition-all cursor-pointer ${selectedPlan === plan.id ? 'border-primary bg-primary/5 shadow-[0_0_30px_rgba(255,215,0,0.15)]' : 'border-white/10 hover:border-white/20 bg-white/2'}`} onClick={() => handlePlanUpgrade(plan)}>
                     <div className="text-[10px] font-mono text-primary uppercase tracking-[0.3em] mb-4">{plan.id}</div>
                     <div className="text-4xl font-display font-black text-white mb-2">{plan.price}€<span className="text-xs text-gray-500 font-mono uppercase">/mes</span></div>
                     <div className="space-y-4 mt-8">

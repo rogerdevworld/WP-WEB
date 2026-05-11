@@ -18,11 +18,13 @@ interface DashboardTabProps {
   catalogMeals: any[];
   onSwitchTab?: (tab: string) => void;
   cards: any[];
+  onPaymentSuccess?: () => void;
 }
 
 export default function DashboardTab({ 
   selectedDays, monthName, daysInMonth, firstDow, dailySelections, 
-  toggleDay, setEditingDay, chartData, user, catalogMeals, onSwitchTab, cards
+  toggleDay, setEditingDay, chartData, user, catalogMeals, onSwitchTab, cards,
+  onPaymentSuccess
 }: DashboardTabProps) {
   
   const [isPaid, setIsPaid] = useState(false);
@@ -38,6 +40,7 @@ export default function DashboardTab({
       return;
     }
     setIsPaid(true);
+    onPaymentSuccess?.();
     // Start automated logistics protocol simulation
     let stage = 1;
     setShippingStage(stage);
@@ -194,13 +197,29 @@ export default function DashboardTab({
             <h3 className="text-xl font-display font-black text-white uppercase italic">Estado de Despliegue Bio-Hacker</h3>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
-              <span className="text-[9px] font-mono text-primary uppercase font-black">En Tránsito</span>
+            {isPaid ? (
+               <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-xl">
+                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping" />
+                 <span className="text-[9px] font-mono text-green-500 uppercase font-black tracking-widest">PAGO_BIO_VERIFICADO</span>
+               </div>
+            ) : (
+               <div className="flex items-center gap-2">
+                 <span className="w-2 h-2 rounded-full bg-white/10" />
+                 <span className="text-[9px] font-mono text-gray-500 uppercase font-black">Esperando Protocolo</span>
+               </div>
+            )}
+            <div className="text-[9px] font-mono text-gray-500 uppercase border-l border-white/10 pl-4">
+              {isPaid ? 'ETA: 08:45 AM' : 'ETA: PENDIENTE'}
             </div>
-            <div className="text-[9px] font-mono text-gray-500 uppercase border-l border-white/10 pl-4">ETA: 08:45 AM</div>
           </div>
         </div>
+
+        {isPaid && (
+          <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-[2px] bg-primary/20 animate-scan z-20" />
+             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.05)_0%,transparent_70%)]" />
+          </div>
+        )}
 
         <div className="relative pt-4 pb-8 px-4">
           {/* Progress Bar Background */}
@@ -221,13 +240,25 @@ export default function DashboardTab({
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: i * 0.2 }}
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 border ${
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 border relative ${
                     step.status === 'completed' ? 'bg-primary text-black border-primary shadow-[0_0_20px_#FFD700]' : 
-                    step.status === 'active' ? 'bg-black border-primary text-primary animate-pulse shadow-[0_0_30px_rgba(255,215,0,0.3)]' : 
+                    step.status === 'active' ? 'bg-black border-primary text-primary shadow-[0_0_30px_rgba(255,215,0,0.3)]' : 
                     'bg-black border-white/10 text-gray-700'
                   }`}
                 >
+                  {step.status === 'active' && (
+                    <motion.div 
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                      className="absolute inset-0 border-2 border-t-primary border-transparent rounded-2xl"
+                    />
+                  )}
                   {step.icon}
+                  {step.status === 'active' && (
+                    <div className="absolute -bottom-1 -right-1 bg-primary text-black text-[6px] font-black px-1 rounded">
+                      {Math.round(Math.random() * 100)}%
+                    </div>
+                  )}
                 </motion.div>
                 <span className={`text-[8px] font-mono font-black uppercase tracking-widest ${step.status === 'pending' ? 'text-gray-700' : 'text-white'}`}>
                   {step.label}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Star, CheckCircle2, Zap, ShieldCheck, Activity, Flame, Info } from 'lucide-react';
+import { Star, CheckCircle2, Zap, ShieldCheck, Activity, Flame, Info, ChefHat } from 'lucide-react';
 
 interface MealCardProps {
   meal: any;
@@ -8,13 +8,14 @@ interface MealCardProps {
   isSelected?: boolean;
   onSelect?: () => void;
   onViewDetails?: (meal: any) => void;
+  onAddToCart?: (meal: any) => void;
   isCompact?: boolean;
   sizeMultiplier?: number;
   isRecommended?: boolean;
 }
 
 export default function MealCard({ 
-  meal, lang, isSelected, onSelect, onViewDetails, isCompact, 
+  meal, lang, isSelected, onSelect, onViewDetails, onAddToCart, isCompact, 
   sizeMultiplier = 1, isRecommended 
 }: MealCardProps) {
   if (!meal) return null;
@@ -73,7 +74,6 @@ export default function MealCard({
 
           <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end z-20">
             <div className="flex flex-col gap-1">
-              <div className="text-2xl font-display font-black text-primary drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]">{price}€</div>
               <div className="flex gap-1">
                 {Array.from({ length: 5 }).map((_, idx) => (
                   <Star 
@@ -116,22 +116,32 @@ export default function MealCard({
             </button>
           </div>
           
-          <div className="bg-black/40 p-3 border border-white/5 rounded-xl group-hover:border-primary/20 transition-all flex items-center justify-between divide-x divide-white/10">
-             <div className="flex-1 text-center px-1">
-                <div className="text-[7px] font-mono text-gray-500 uppercase tracking-widest mb-1">Energy</div>
-                <div className="text-base font-display font-bold text-white">{kcal}<span className="text-[8px] ml-0.5 opacity-50 text-gray-400">K</span></div>
-             </div>
-             <div className="flex-1 text-center px-1">
-                <div className="text-[7px] font-mono text-gray-500 uppercase tracking-widest mb-1">Protein</div>
-                <div className="text-base font-display font-bold text-primary">{protein}<span className="text-[8px] ml-0.5 opacity-50 text-primary/50">G</span></div>
-             </div>
-             <div className="flex-1 text-center px-1">
-                <div className="text-[7px] font-mono text-gray-500 uppercase tracking-widest mb-1">Carbs</div>
-                <div className="text-base font-display font-bold text-white">{Math.round((meal.carbs || 30) * sizeMultiplier)}<span className="text-[8px] ml-0.5 opacity-50 text-gray-400">G</span></div>
-             </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5 group-hover:border-primary/20 transition-all">
+              <div className="text-[7px] font-mono text-gray-500 uppercase mb-1">Energy</div>
+              <div className="text-[10px] font-black text-white">{meal.kcal} <span className="text-[6px] text-primary">KCAL</span></div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5 group-hover:border-primary/20 transition-all">
+              <div className="text-[7px] font-mono text-gray-500 uppercase mb-1">Protein</div>
+              <div className="text-[10px] font-black text-white">{Math.round(meal.protein * sizeMultiplier)} <span className="text-[6px] text-primary">G</span></div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5 group-hover:border-primary/20 transition-all">
+              <div className="text-[7px] font-mono text-gray-500 uppercase mb-1">Carbs</div>
+              <div className="text-[10px] font-black text-white">{Math.round(meal.carbs * sizeMultiplier)} <span className="text-[6px] text-primary">G</span></div>
+            </div>
           </div>
+        </div>
 
-          <div className="mt-auto" />
+        {/* Footer info instead of cart */}
+        <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
+           <div className="text-[8px] font-mono text-gray-600 uppercase tracking-widest italic flex items-center gap-1">
+             <ShieldCheck size={10} className="text-primary/50" /> Bio-Protocol_Certified
+           </div>
+           {isSelected && (
+              <div className="px-3 py-1 bg-primary text-black text-[8px] font-black rounded-full shadow-[0_0_15px_#FFD700]">
+                SELECCIONADO
+              </div>
+           )}
         </div>
       </div>
     </motion.div>

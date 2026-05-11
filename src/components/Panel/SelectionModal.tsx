@@ -173,11 +173,19 @@ export default function SelectionModal({
 
           <div className="flex items-center gap-6">
             <div className="bg-white/5 px-8 py-3 rounded-xl border border-white/10 text-right">
-               <div className="text-[8px] font-mono text-gray-500 uppercase tracking-widest mb-1">TOTAL_DIARIO_PROTOCOLO</div>
-               <div className="text-2xl font-display font-black text-primary">{totalPrice.toFixed(2)}€</div>
+               <div className="text-[8px] font-mono text-gray-500 uppercase tracking-widest mb-1">PROTOCOLO_DIARIO_CONF</div>
+               <div className="text-2xl font-display font-black text-primary uppercase">{categories.find(c => c.id === activeCategory)?.label}</div>
             </div>
             <button 
-              onClick={() => savePlan(editingDay)}
+              onClick={() => {
+                const hasLunch = selection['almuerzo'] && selection['almuerzo'].length > 0;
+                if (!hasLunch) {
+                  alert(lang === 'es' ? "BIO_ERROR: El Almuerzo es obligatorio en el protocolo diario." : "BIO_ERROR: Lunch is mandatory for the daily protocol.");
+                  setActiveCategory('almuerzo');
+                  return;
+                }
+                savePlan(editingDay);
+              }}
               className="px-12 py-5 bg-primary text-black font-display font-black uppercase text-sm tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-[0_0_30px_rgba(255,215,0,0.3)]"
             >
               <Save size={20} />

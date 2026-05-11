@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
-import MealCard from './MealCard';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CreditCard, Zap, CheckCircle2 } from 'lucide-react';
 
-export default function MealCatalog({ meals, lang, limit, sizeMultiplier, onViewDetails, user }: { meals: any[], lang: string, limit?: number, sizeMultiplier?: number, onViewDetails?: (meal: any) => void, user?: any }) {
+export default function MealCatalog({ 
+  meals, lang, limit, sizeMultiplier = 1, onViewDetails, onPurchase, user 
+}: { 
+  meals: any[], lang: string, limit?: number, sizeMultiplier?: number, 
+  onViewDetails?: (meal: any) => void, onPurchase?: (selected: any[]) => void, user?: any 
+}) {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [selections, setSelections] = useState<any[]>([]);
 
   const categories = [
     { id: 'ALL', label: lang === 'es' ? 'TODO' : 'ALL' },
@@ -13,6 +18,16 @@ export default function MealCatalog({ meals, lang, limit, sizeMultiplier, onView
     { id: 'snack', label: lang === 'es' ? 'SNACK' : 'SNACK' },
     { id: 'juices', label: lang === 'es' ? 'JUGOS' : 'JUICES' },
   ];
+
+  const toggleSelection = (meal: any) => {
+    if (selections.find(m => m.id_code === meal.id_code)) {
+      setSelections(selections.filter(m => m.id_code !== meal.id_code));
+    } else {
+      setSelections([...selections, { ...meal, price: meal.price * sizeMultiplier }]);
+    }
+  };
+
+  const totalPrice = selections.reduce((acc, m) => acc + parseFloat(m.price), 0);
 
   const checkIsRecommended = (meal: any) => {
     if (!user) return false;
@@ -29,10 +44,7 @@ export default function MealCatalog({ meals, lang, limit, sizeMultiplier, onView
 
   const filteredMeals = selectedCategory === 'ALL' 
     ? meals 
-    : meals.filter(m => {
-        const cat = m.category?.toLowerCase();
-        return cat === selectedCategory.toLowerCase();
-      });
+    : meals.filter(m => m.category?.toLowerCase() === selectedCategory.toLowerCase());
 
   const visibleMeals = limit ? filteredMeals.slice(0, limit) : filteredMeals;
 
@@ -46,7 +58,7 @@ export default function MealCatalog({ meals, lang, limit, sizeMultiplier, onView
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 relative pb-32">
       {/* Category Filter Bar */}
       {!limit && (
         <div className="flex justify-center">
@@ -81,26 +93,54 @@ export default function MealCatalog({ meals, lang, limit, sizeMultiplier, onView
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <AnimatePresence mode="popLayout">
             {visibleMeals.map((meal) => (
-              <motion.div
-                key={meal.id_code}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-              >
-                <MealCard 
-                  meal={meal} 
-                  lang={lang} 
-                  sizeMultiplier={sizeMultiplier}
-                  onViewDetails={onViewDetails}
-                  isRecommended={checkIsRecommended(meal)}
-                />
+              <motion.div key={meal.id_code} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
+                <div onClick={() => toggleSelection(meal)} className="cursor-pointer relative">
+                   <MealCard 
+                    meal={meal} 
+                    lang={lang} 
+                    sizeMultiplier={sizeMultiplier}
+                    onViewDetails={onViewDetails}
+                    isRecommended={checkIsRecommended(meal)}
+                    isSelected={!!selections.find(m => m.id_code === meal.id_code)}
+                  />
+                  {selections.find(m => m.id_code === meal.id_code) && (
+                    <div className="absolute top-4 right-4 text-primary animate-bounce">
+                      <CheckCircle2 size={24} fill="black" />
+                    </div>
+                  )}
+                </div>
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
       )}
+
+      {/* Floating Purchase Button */}
+      <AnimatePresence>
+        {selections.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed bottom-12 left-[280px] z-50"
+          >
+            <button 
+              onClick={() => { onPurchase?.(selections); setSelections([]); }}
+              className="bg-primary text-black px-8 py-5 rounded-2xl shadow-[0_20px_50px_rgba(255,215,0,0.3)] flex items-center gap-6 group hover:scale-105 transition-all"
+            >
+              <div className="flex flex-col text-left border-r border-black/10 pr-6">
+                <span className="text-[10px] font-mono font-bold uppercase opacity-60">Total Protocolo</span>
+                <span className="text-2xl font-display font-black">{totalPrice.toFixed(2)}€</span>
+              </div>
+              <div className="flex items-center gap-3 font-black text-sm uppercase italic">
+                <Zap size={18} fill="currentColor" />
+                PROTOCOLAR Y PAGAR
+                <CreditCard size={18} />
+              </div>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
