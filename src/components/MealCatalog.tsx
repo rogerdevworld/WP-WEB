@@ -9,13 +9,17 @@ export default function MealCatalog({ meals, lang, limit, sizeMultiplier, onView
     { id: 'ALL', label: lang === 'es' ? 'TODO' : 'ALL' },
     { id: 'breakfast', label: lang === 'es' ? 'DESAYUNO' : 'BREAKFAST' },
     { id: 'main', label: lang === 'es' ? 'ALMUERZO/CENA' : 'LUNCH/DINNER' },
-    { id: 'snacks', label: lang === 'es' ? 'SNACK' : 'SNACK' },
+    { id: 'snack', label: lang === 'es' ? 'SNACK' : 'SNACK' },
     { id: 'juices', label: lang === 'es' ? 'JUGOS' : 'JUICES' },
   ];
 
   const filteredMeals = selectedCategory === 'ALL' 
     ? meals 
-    : meals.filter(m => m.category?.toLowerCase() === selectedCategory.toLowerCase());
+    : meals.filter(m => {
+        const cat = m.category?.toLowerCase();
+        if (selectedCategory === 'main') return cat === 'lunch' || cat === 'dinner';
+        return cat === selectedCategory.toLowerCase();
+      });
 
   const visibleMeals = limit ? filteredMeals.slice(0, limit) : filteredMeals;
 
@@ -44,7 +48,7 @@ export default function MealCatalog({ meals, lang, limit, sizeMultiplier, onView
               >
                 {selectedCategory === cat.id && (
                   <motion.div
-                    layoutId="activeTab"
+                    layoutId="activeCategoryTab"
                     className="absolute inset-0 bg-primary rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)]"
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                   />

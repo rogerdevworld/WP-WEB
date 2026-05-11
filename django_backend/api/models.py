@@ -4,9 +4,13 @@ from django.contrib.auth.models import User
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     full_name = models.CharField(max_length=255, blank=True)
-    phone = models.CharField(max_length=20, blank=True)
+    phone = models.CharField(max_length=50, blank=True)
     height = models.FloatField(null=True, blank=True)
     weight = models.FloatField(null=True, blank=True)
+    target_weight = models.FloatField(null=True, blank=True)
+    age = models.IntegerField(null=True, blank=True)
+    birth_date = models.DateField(null=True, blank=True)
+    credits = models.IntegerField(default=100)
     
     # Nuevo: Talla de taper (S, M, L)
     TUPPER_SIZES = [

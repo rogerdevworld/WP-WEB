@@ -64,7 +64,7 @@ export default function App() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     const endpoint = isRegistering ? '/api/register' : '/api/login'
-    const payload = isRegistering ? { email, password, name, phone, height, weight } : { email, password }
+    const payload = isRegistering ? { email, password, name, phone, height: height || null, weight: weight || null } : { email, password }
 
     try {
       const response = await fetch(endpoint, {
@@ -158,6 +158,10 @@ export default function App() {
                     <div className="space-y-1">
                       <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Full Name</label>
                       <input type="text" required value={name} onChange={e=>setName(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white" placeholder="NAME_INPUT" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Phone Number (International)</label>
+                      <input type="text" value={phone} onChange={e=>setPhone(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white" placeholder="+34 600 000 000" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">

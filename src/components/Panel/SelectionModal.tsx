@@ -34,9 +34,9 @@ export default function SelectionModal({
   // Mapping categories for the UI
   const categories = [
     { id: 'desayuno', backendId: 'breakfast', label: lang === 'es' ? 'DESAYUNO' : 'BREAKFAST' },
-    { id: 'almuerzo', backendId: 'main', label: lang === 'es' ? 'ALMUERZO' : 'LUNCH' },
-    { id: 'cena', backendId: 'main', label: lang === 'es' ? 'CENA' : 'DINNER' },
-    { id: 'snack', backendId: 'snacks', label: lang === 'es' ? 'SNACK' : 'SNACK' },
+    { id: 'almuerzo', backendId: 'lunch', label: lang === 'es' ? 'ALMUERZO' : 'LUNCH' },
+    { id: 'cena', backendId: 'dinner', label: lang === 'es' ? 'CENA' : 'DINNER' },
+    { id: 'snack', backendId: 'snack', label: lang === 'es' ? 'SNACK' : 'SNACK' },
     { id: 'jugos', backendId: 'juices', label: lang === 'es' ? 'JUGOS' : 'JUICES' },
   ];
 

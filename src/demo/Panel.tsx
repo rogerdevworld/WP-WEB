@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
   X, LogOut, User as UserIcon, Settings as SettingsIcon, ChefHat, History as HistoryIcon, 
-  CreditCard, LayoutDashboard, Bell, ChevronDown, ChevronLeft
+  CreditCard, LayoutDashboard, Bell, ChevronDown, ChevronLeft, AlertTriangle
 } from 'lucide-react';
 import { i18n, mealOptions } from '../data';
 
@@ -51,7 +51,8 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
 
   const [settingsForm, setSettingsForm] = useState({
     name: user?.name || '', phone: user?.phone || '', height: user?.height || '',
-    weight: user?.weight || '', tupper_size: user?.tupper_size || 'M',
+    weight: user?.weight || '', target_weight: user?.target_weight || '', 
+    age: user?.age || '', birth_date: user?.birth_date || '', tupper_size: user?.tupper_size || 'M',
     dietary_notes: user?.dietary_notes || '', is_vegetarian: user?.is_vegetarian || false
   });
 
@@ -62,11 +63,26 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
     if (user) {
       setSettingsForm({
         name: user.name || '', phone: user.phone || '', height: user.height || '',
-        weight: user.weight || '', tupper_size: user.tupper_size || 'M',
+        weight: user.weight || '', target_weight: user.target_weight || '', 
+        age: user.age || '', birth_date: user.birth_date || '', tupper_size: user.tupper_size || 'M',
         dietary_notes: user.dietary_notes || '', is_vegetarian: user.is_vegetarian || false
       });
     }
   }, [user]);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
+
+  const triggerNotify = (type: 'success' | 'error', msg: string) => {
+    setNotification({ type, msg });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  const refreshData = () => {
+    if (!user?.userId) return;
+    fetch(`/api/meals/pending/${user.userId}`).then(res => res.json()).then(data => { if (Array.isArray(data)) setPendingFeedbacks(data); });
+    fetch(`/api/meals/history/${user.userId}`).then(res => res.json()).then(data => { if (Array.isArray(data)) setMealHistory(data); });
+    fetch(`/api/meals/plans/${user.userId}`).then(res => res.json()).then(data => { if (Array.isArray(data)) setMealPlans(data); });
+    fetch(`/api/profile/me/${user.userId}`).then(res => res.json()).then(data => { if (data.userId) setUser(data); });
+  };
 
   // Initial Data Fetch
   React.useEffect(() => {
@@ -104,16 +120,19 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
       if (response.ok) {
         setPendingFeedbacks(prev => prev.filter(f => f.id !== currentFeedback.id));
         setCurrentFeedback(null);
-        alert(lang === 'es' ? "¡Gracias por tu bio-feedback!" : "Thank you for your bio-feedback!");
+        triggerNotify('success', lang === 'es' ? "Bio-Feedback sincronizado correctamente." : "Bio-Feedback synced successfully.");
+        refreshData();
       }
-    } catch (e) { alert("NETWORK_FAILURE: Protocol interrupted."); } finally { setIsUpdating(false); }
+    } catch (e) { triggerNotify('error', "NETWORK_FAILURE: Protocol interrupted."); } finally { setIsUpdating(false); }
   };
 
   const updateProfile = async () => {
     if (!user?.userId) return;
     setIsUpdating(true);
     const formData = new FormData();
-    Object.entries(settingsForm).forEach(([k, v]) => formData.append(k, v.toString()));
+    Object.entries(settingsForm).forEach(([k, v]) => {
+      if (v !== null && v !== undefined) formData.append(k, v.toString());
+    });
     if (fileInputRef.current?.files?.[0]) formData.append('photo', fileInputRef.current.files[0]);
 
     try {
@@ -121,9 +140,9 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
       if (response.ok) {
         const updatedUser = await response.json();
         setUser(updatedUser);
-        alert(lang === 'es' ? "Perfil actualizado correctamente." : "Profile updated successfully.");
+        triggerNotify('success', lang === 'es' ? "Perfil actualizado correctamente." : "Profile updated successfully.");
       }
-    } catch (e) { alert("NETWORK_FAILURE: Remote node unreachable."); } finally { setIsUpdating(false); }
+    } catch (e) { triggerNotify('error', "NETWORK_FAILURE: Remote node unreachable."); } finally { setIsUpdating(false); }
   };
 
   const toggleDay = useCallback((day: number) => {
@@ -149,18 +168,25 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
   const savePlan = async (day: number) => {
     if (!user?.userId) return;
     const selection = dailySelections[day] || {};
-    if (!selection.lunch || selection.lunch.length === 0) {
-      alert(lang === 'es' ? "BIO_ERROR: El Almuerzo es obligatorio." : "BIO_ERROR: Lunch is mandatory.");
+    
+    // Updated validation with correct keys
+    if (!selection.almuerzo || selection.almuerzo.length === 0) {
+      triggerNotify('error', lang === 'es' ? "BIO_ERROR: El Almuerzo es obligatorio para estabilizar macros." : "BIO_ERROR: Lunch is mandatory to stabilize macros.");
       return;
     }
+    
     try {
       const response = await fetch(`/api/meals/select/${user.userId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date: `2026-05-${day.toString().padStart(2, '0')}`, selections: selection })
       });
-      if (response.ok) setEditingDay(null);
-    } catch (e) { alert("NETWORK_FAILURE: Remote node unreachable."); }
+      if (response.ok) {
+        setEditingDay(null);
+        triggerNotify('success', lang === 'es' ? "Plan operativo guardado." : "Operational plan saved.");
+        refreshData();
+      }
+    } catch (e) { triggerNotify('error', "NETWORK_FAILURE: Remote node unreachable."); }
   };
 
   const now = new Date();
@@ -178,6 +204,38 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
         handleSelection={handleSelection} savePlan={savePlan} t={t}
         onViewDetails={setSelectedMealForDetails}
       />
+
+      <AnimatePresence>
+        {notification && (
+          <motion.div 
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className="fixed bottom-10 right-10 z-[300] w-full max-w-sm"
+          >
+            <div className={`backdrop-blur-2xl p-5 rounded-2xl flex items-center gap-5 shadow-2xl border-2 transition-all ${
+              notification.type === 'success' 
+                ? 'bg-green-600 border-green-400 shadow-[0_0_50px_rgba(34,197,94,0.5)]' 
+                : 'bg-red-600 border-red-400 shadow-[0_0_50px_rgba(239,68,68,0.5)]'
+            }`}>
+              <div className={`p-3 rounded-xl text-black animate-pulse bg-white`}>
+                <AlertTriangle size={26} />
+              </div>
+              <div className="flex-1">
+                <div className={`text-[10px] font-mono font-black uppercase tracking-widest mb-1 ${
+                  notification.type === 'success' ? 'text-green-500' : 'text-red-500'
+                }`}>
+                  {notification.type === 'success' ? 'BIO_SYNC_OK' : 'CRITICAL_BIO_ERROR'}
+                </div>
+                <div className="text-sm font-display font-bold text-white leading-tight">{notification.msg}</div>
+              </div>
+              <button onClick={() => setNotification(null)} className="p-2 text-white/30 hover:text-white transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       <FeedbackModal 
         currentFeedback={currentFeedback} setCurrentFeedback={setCurrentFeedback} 
@@ -248,9 +306,17 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
                     {pendingFeedbacks.length === 0 ? <div className="text-[10px] font-mono text-gray-500 py-4 text-center">Protocolo al día. Sin alertas.</div> : (
                       <div className="space-y-3">
                         {pendingFeedbacks.map(f => (
-                          <div key={f.id} onClick={() => { setCurrentFeedback(f); setShowNotificationMenu(false); }} className="p-3 bg-white/5 rounded-xl border border-white/5 hover:border-primary/50 transition-all cursor-pointer group">
-                            <div className="flex justify-between items-start mb-1"><span className="text-[10px] font-bold text-white group-hover:text-primary transition-colors">{f.meal.name_es}</span><span className="text-[8px] font-mono text-gray-500">{f.date}</span></div>
-                            <div className="text-[8px] font-mono text-gray-500 uppercase">Click para evaluar</div>
+                          <div key={f.id} onClick={() => { setCurrentFeedback(f); setShowNotificationMenu(false); }} className="p-3 bg-white/5 rounded-xl border border-white/5 hover:border-primary/50 transition-all cursor-pointer group flex gap-3">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-white/10">
+                              <img src={f.meal.img_path} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-start mb-1">
+                                <span className="text-[10px] font-bold text-white group-hover:text-primary transition-colors truncate">{f.meal.name_es}</span>
+                                <span className="text-[8px] font-mono text-gray-500 shrink-0 ml-2">{f.date}</span>
+                              </div>
+                              <div className="text-[8px] font-mono text-gray-500 uppercase">Click para evaluar</div>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -272,7 +338,10 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
                 </div>
                 <div className="text-left hidden md:block">
                   <div className="text-xs font-bold leading-tight">{user?.name || 'OPERATOR'}</div>
-                  <div className="text-[10px] font-mono text-gray-500">BCN_ZONE_01</div>
+                  <div className="text-[10px] font-mono text-primary flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                    {user?.credits || 100} CR
+                  </div>
                 </div>
                 <ChevronDown size={14} className={`text-gray-500 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
               </button>
@@ -290,9 +359,9 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
         </nav>
 
         <main className="p-8 max-w-7xl mx-auto">
-          {activeTab === 'dashboard' && <DashboardTab selectedDays={selectedDays} monthName={monthName} daysInMonth={daysInMonth} firstDow={firstDow} dailySelections={dailySelections} toggleDay={toggleDay} setEditingDay={setEditingDay} chartData={chartData} user={user} />}
+          {activeTab === 'dashboard' && <DashboardTab selectedDays={selectedDays} monthName={monthName} daysInMonth={daysInMonth} firstDow={firstDow} dailySelections={dailySelections} toggleDay={toggleDay} setEditingDay={setEditingDay} chartData={chartData} user={user} catalogMeals={catalogMeals} />}
           {activeTab === 'menu' && <div className="space-y-12"><div className="text-center"><div className="text-[10px] font-mono text-primary tracking-[0.5em] uppercase mb-4">BIO_CATALOG_SYNC</div><h2 className="text-5xl font-display font-black uppercase text-white">Catálogo de Alto Rendimiento</h2></div><MealCatalog meals={catalogMeals} lang={lang} sizeMultiplier={user?.tupper_size === 'S' ? 0.8 : user?.tupper_size === 'L' ? 1.3 : 1} onViewDetails={setSelectedMealForDetails} /></div>}
-          {activeTab === 'history' && <HistoryTab mealHistory={mealHistory} onViewDetails={setSelectedMealForDetails} />}
+          {activeTab === 'history' && <HistoryTab mealHistory={mealHistory} onViewDetails={setSelectedMealForDetails} onEvaluate={setCurrentFeedback} />}
           {activeTab === 'billing' && <BillingTab user={user} selectedDays={selectedDays} />}
           {activeTab === 'settings' && <SettingsTab user={user} settingsForm={settingsForm} setSettingsForm={setSettingsForm} fileInputRef={fileInputRef} updateProfile={updateProfile} isUpdating={isUpdating} t={t} />}
         </main>

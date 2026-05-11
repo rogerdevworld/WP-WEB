@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Timer, CreditCard, Droplets, Zap, Calendar as CalendarIcon, CheckCircle2, Plus, Activity, Scale } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 
@@ -12,12 +13,27 @@ interface DashboardTabProps {
   setEditingDay: (day: number) => void;
   chartData: any[];
   user: any;
+  catalogMeals: any[];
 }
 
 export default function DashboardTab({ 
   selectedDays, monthName, daysInMonth, firstDow, dailySelections, 
-  toggleDay, setEditingDay, chartData, user 
+  toggleDay, setEditingDay, chartData, user, catalogMeals 
 }: DashboardTabProps) {
+  
+  const today = new Date().getDate();
+
+  const calculateDayPrice = (daySelections: any) => {
+    let total = 0;
+    Object.values(daySelections).forEach((ids: any) => {
+      ids.forEach((id: string) => {
+        const meal = catalogMeals.find(m => m.id_code === id);
+        if (meal) total += parseFloat(meal.price);
+      });
+    });
+    return total;
+  };
+
   return (
     <div className="space-y-12">
       {/* Top KPI Section (4 Cards) */}
@@ -78,12 +94,56 @@ export default function DashboardTab({
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
                 const isSelected = selectedDays.has(day);
-                const isConfigured = dailySelections[day] && Object.keys(dailySelections[day]).length >= 3;
+                const isConfigured = dailySelections[day] && Object.keys(dailySelections[day]).length > 0;
+                const isPast = day < today;
+                const isToday = day === today;
+                const dayPrice = isConfigured ? calculateDayPrice(dailySelections[day]) : 0;
+
                 return (
-                  <button key={day} onClick={() => toggleDay(day)} className={`aspect-square flex flex-col items-center justify-center rounded-xl border transition-all duration-500 relative group ${isSelected ? 'bg-primary border-primary text-black' : 'bg-white/2 border-white/10 text-gray-500 hover:border-primary/40'}`}>
-                    <span className="text-sm font-mono font-bold">{day}</span>
-                    {isSelected && isConfigured && <div className="absolute top-2 right-2"><CheckCircle2 size={12} className="text-black" /></div>}
-                    {isSelected && <div onClick={(e) => { e.stopPropagation(); setEditingDay(day); }} className="mt-2 p-1.5 bg-black/20 rounded-lg hover:bg-black/40 transition-colors"><Plus size={12} className="text-black" /></div>}
+                  <button 
+                    key={day} 
+                    disabled={isPast}
+                    onClick={() => toggleDay(day)} 
+                    className={`aspect-square flex flex-col items-center justify-center rounded-xl border transition-all duration-500 relative group overflow-hidden ${
+                      isPast 
+                        ? 'bg-black/40 border-white/5 text-gray-700 cursor-not-allowed opacity-50' 
+                        : isSelected 
+                          ? 'bg-primary border-primary text-black' 
+                          : isToday 
+                            ? 'bg-white/5 border-primary/60 text-white shadow-[0_0_15px_rgba(255,215,0,0.2)]'
+                            : 'bg-white/2 border-white/10 text-gray-500 hover:border-primary/40'
+                    }`}
+                  >
+                    {/* Loading/Flowing background for active days */}
+                    {isSelected && (
+                      <motion.div 
+                        initial={{ x: '-100%' }}
+                        animate={{ x: '100%' }}
+                        transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
+                        className="absolute inset-0 bg-white/20 -z-10"
+                      />
+                    )}
+
+                    <span className={`text-sm font-mono font-bold ${isToday ? 'text-primary' : ''}`}>{day}</span>
+                    
+                    {!isPast && isSelected && (
+                      <div 
+                        onClick={(e) => { e.stopPropagation(); setEditingDay(day); }} 
+                        className="mt-2 p-1.5 bg-black/20 rounded-lg hover:bg-black/40 transition-colors flex items-center gap-1"
+                      >
+                        {isConfigured ? (
+                          <span className="text-[8px] font-black font-mono">{dayPrice.toFixed(1)}€</span>
+                        ) : (
+                          <Plus size={12} className="text-black" />
+                        )}
+                      </div>
+                    )}
+
+                    {isSelected && isConfigured && (
+                      <div className="absolute top-2 right-2">
+                        <CheckCircle2 size={12} className={isSelected ? 'text-black' : 'text-primary'} />
+                      </div>
+                    )}
                   </button>
                 );
               })}

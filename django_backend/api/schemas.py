@@ -9,6 +9,9 @@ class RegisterIn(Schema):
     phone: Optional[str] = ""
     height: Optional[float] = None
     weight: Optional[float] = None
+    target_weight: Optional[float] = None
+    age: Optional[int] = None
+    birth_date: Optional[date] = None
     tupper_size: Optional[str] = "M"
     dietary_notes: Optional[str] = ""
     is_vegetarian: Optional[bool] = False
@@ -24,11 +27,15 @@ class AuthResponse(Schema):
     name: Optional[str] = ""
     height: Optional[float] = None
     weight: Optional[float] = None
+    target_weight: Optional[float] = None
+    age: Optional[int] = None
+    birth_date: Optional[date] = None
     phone: Optional[str] = ""
     tupper_size: Optional[str] = "M"
     profile_photo: Optional[str] = None
     dietary_notes: Optional[str] = ""
     is_vegetarian: Optional[bool] = False
+    credits: int = 100
 
 class MealSelectionIn(Schema):
     date: str # ISO format YYYY-MM-DD
