@@ -61,6 +61,18 @@ export default function App() {
     setPage('demo')
   }
 
+  const handlePhoneChange = (val: string) => {
+    let cleaned = val.replace(/[^\d]/g, '');
+    if (!cleaned.startsWith('34')) cleaned = '34' + cleaned;
+    let main = cleaned.slice(2).slice(0, 9);
+    let formatted = '+34';
+    if (main.length > 0) {
+      const chunks = main.match(/.{1,3}/g);
+      if (chunks) formatted += ' ' + chunks.join(' ');
+    }
+    setPhone(formatted);
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     const endpoint = isRegistering ? '/api/register' : '/api/login'
@@ -160,8 +172,8 @@ export default function App() {
                       <input type="text" required value={name} onChange={e=>setName(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white" placeholder="NAME_INPUT" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Phone Number (International)</label>
-                      <input type="text" value={phone} onChange={e=>setPhone(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white" placeholder="+34 600 000 000" />
+                      <label className="text-[8px] font-mono text-gray-500 uppercase ml-2">Phone Number (Spain Fixed)</label>
+                      <input type="text" value={phone} onChange={e=>handlePhoneChange(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white" placeholder="+34 600 000 000" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">

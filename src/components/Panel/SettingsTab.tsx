@@ -27,6 +27,31 @@ export default function SettingsTab({
     } catch { return '--'; }
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    
+    // Remove all non-digits except +
+    let cleaned = val.replace(/[^\d]/g, '');
+    
+    // Ensure it starts with 34 (Spain)
+    if (!cleaned.startsWith('34')) {
+        cleaned = '34' + cleaned;
+    }
+    
+    // Extract numbers after 34
+    let main = cleaned.slice(2);
+    main = main.slice(0, 9); // Limit to 9 digits for Spain
+    
+    // Format: +34 123 456 789
+    let formatted = '+34';
+    if (main.length > 0) {
+      const chunks = main.match(/.{1,3}/g);
+      if (chunks) formatted += ' ' + chunks.join(' ');
+    }
+    
+    setSettingsForm({...settingsForm, phone: formatted});
+  };
+
   return (
     <div className="w-full">
       <div className="flex justify-between items-end mb-12">
@@ -48,7 +73,6 @@ export default function SettingsTab({
           {/* Section 1: Identity & Avatar */}
           <div className="p-10 flex flex-col items-center lg:w-1/4 text-center shrink-0">
             <div className="relative group mb-8">
-              {/* Refined Avatar Container to avoid "cut-off" corners */}
               <div className="w-44 h-44 p-1 rounded-[2.5rem] bg-gradient-to-tr from-primary/40 to-transparent relative shadow-[0_0_50px_rgba(255,215,0,0.15)] group-hover:shadow-[0_0_60px_rgba(255,215,0,0.3)] transition-all duration-500">
                 <div className="w-full h-full rounded-[2.2rem] overflow-hidden bg-black flex items-center justify-center relative border border-white/10 group-hover:border-primary transition-colors">
                   {(user?.profile_photo || user?.photo) ? (
@@ -89,8 +113,9 @@ export default function SettingsTab({
             <div className="space-y-2">
               <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest flex items-center gap-2"><Phone size={12} /> {t.panel.phone}</label>
               <input 
-                type="text" value={settingsForm.phone} onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
+                type="text" value={settingsForm.phone} onChange={handlePhoneChange}
                 className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3 text-sm focus:border-primary outline-none transition-all font-mono text-white"
+                placeholder="+34 600 000 000"
               />
             </div>
             <div className="space-y-2">
@@ -108,7 +133,6 @@ export default function SettingsTab({
               />
             </div>
             
-            {/* BIRTH DATE INSTEAD OF AGE */}
             <div className="space-y-2">
               <div className="flex justify-between items-center pr-2">
                 <label className="text-[9px] font-mono text-gray-500 uppercase tracking-widest flex items-center gap-2"><Calendar size={12} /> {t.panel.birth_date}</label>
