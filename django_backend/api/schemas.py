@@ -1,6 +1,6 @@
 from ninja import Schema
 from typing import Optional, List
-from datetime import date as date_obj
+from datetime import date
 
 class RegisterIn(Schema):
     email: str
@@ -10,6 +10,8 @@ class RegisterIn(Schema):
     height: Optional[float] = None
     weight: Optional[float] = None
     tupper_size: Optional[str] = "M"
+    dietary_notes: Optional[str] = ""
+    is_vegetarian: Optional[bool] = False
 
 class LoginIn(Schema):
     email: str
@@ -25,6 +27,8 @@ class AuthResponse(Schema):
     phone: Optional[str] = ""
     tupper_size: Optional[str] = "M"
     profile_photo: Optional[str] = None
+    dietary_notes: Optional[str] = ""
+    is_vegetarian: Optional[bool] = False
 
 class MealSelectionIn(Schema):
     date: str # ISO format YYYY-MM-DD
@@ -32,9 +36,56 @@ class MealSelectionIn(Schema):
 
 class MealSelectionOut(Schema):
     id: int
-    date: date_obj
+    date: date
     selections: dict
     status: str
 
 class ErrorResponse(Schema):
     error: str
+
+class MealOut(Schema):
+    id_code: str
+    name_es: str
+    name_en: str
+    category: str
+    kcal: int
+    protein: float
+    carbs: float
+    fats: float
+    img_path: str
+    ingredients: List[str]
+    recipe: str
+    prep_mode: str
+    storage_info: str
+    cost: float
+    price: float
+    barcode: Optional[str] = None
+    avg_rating: float = 5.0
+    avg_salt_rating: float = 3.0
+    avg_pepper_rating: float = 3.0
+    avg_sugar_rating: float = 3.0
+    total_reviews: int = 0
+    flavor_profile: str = "savory"
+
+class FeedbackIn(Schema):
+    history_id: int
+    rating: int
+    salt_rating: int
+    pepper_rating: int
+    sugar_rating: int
+    comment: Optional[str] = None
+    is_reported: bool = False
+    issue_details: Optional[str] = None
+
+class MealHistoryOut(Schema):
+    id: int
+    date: date
+    meal: MealOut
+    rating: int
+    salt_rating: int
+    pepper_rating: int
+    sugar_rating: int
+    comment: Optional[str] = None
+    is_reported: bool
+    issue_details: Optional[str] = None
+    meal_photo: Optional[str] = None

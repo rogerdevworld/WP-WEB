@@ -41,12 +41,20 @@ export const i18n = {
       settings: "Ajustes",
       logout: "Cerrar Sesión",
       edit: "Editar Perfil",
+      settings_title: "Ajustes del Bio-Hacker",
+      full_name: "Nombre Completo",
+      phone: "Teléfono",
+      height: "Altura (cm)",
+      weight: "Peso (kg)",
+      tupper_size: "Talla de Taper (Bio-Capacity)",
+      dietary_notes: "Alergias y Restricciones",
+      is_vegetarian: "Régimen Vegetariano",
+      save_settings: "GUARDAR_CONFIGURACION_BIO",
       minUnits: "Se requiere un mínimo de 15 platos para activar la suscripción",
       meals: {
         breakfast: "Desayuno",
         lunch: "Almuerzo (Obligatorio)",
-        snack1: "Snack Mañana",
-        snack2: "Snack Tarde",
+        snack: "Snacks (Recomendado: Mañana/Tarde)",
         dinner: "Cena",
         juices: "Jugos",
         warningMultiple: "⚠️ Protocolo de sobrecarga: Se ha seleccionado más de una unidad."
@@ -91,12 +99,20 @@ export const i18n = {
       settings: "Settings",
       logout: "Logout",
       edit: "Edit Profile",
+      settings_title: "Bio-Hacker Settings",
+      full_name: "Full Name",
+      phone: "Phone",
+      height: "Height (cm)",
+      weight: "Weight (kg)",
+      tupper_size: "Tupper Size (Bio-Capacity)",
+      dietary_notes: "Allergies & Restrictions",
+      is_vegetarian: "Vegetarian Regime",
+      save_settings: "SAVE_BIO_CONFIG",
       minUnits: "A minimum of 15 meals is required to activate subscription",
       meals: {
         breakfast: "Breakfast",
         lunch: "Lunch (Mandatory)",
-        snack1: "Morning Snack",
-        snack2: "Afternoon Snack",
+        snack: "Snacks (Recommended: Morning/Afternoon)",
         dinner: "Dinner",
         juices: "Juices",
         warningMultiple: "⚠️ Overload Protocol: More than one unit selected."
@@ -111,18 +127,16 @@ export const mealOptions = {
     { id: 'b2', name: { es: 'Tortitas de Claras y Plátano', en: 'Egg White & Banana Pancakes' }, kcal: 420, img: '/meals/tortitas.png' },
     { id: 'b3', name: { es: 'Tostada Aguacate & Pavo', en: 'Avocado & Turkey Toast' }, kcal: 380, img: '/meals/tostada_aguacate.png' }
   ],
-  snack1: [
-    { id: 's1_1', name: { es: 'Mix de Frutos Secos Bio', en: 'Bio Nut Mix' }, kcal: 180, img: '/meals/frutos_secos.png' },
-    { id: 's1_2', name: { es: 'Yogur Griego con Chía', en: 'Greek Yogurt with Chia' }, kcal: 150, img: '/meals/yogur_chia.png' }
+  snack: [
+    { id: 's1', name: { es: 'Mix de Frutos Secos Bio', en: 'Bio Nut Mix' }, kcal: 180, img: '/meals/frutos_secos.png', tag: 'Mañana' },
+    { id: 's2', name: { es: 'Yogur Griego con Chía', en: 'Greek Yogurt with Chia' }, kcal: 150, img: '/meals/yogur_chia.png', tag: 'Tarde' },
+    { id: 's3', name: { es: 'Barrita de Proteína Raw', en: 'Raw Protein Bar' }, kcal: 210, img: '/meals/barrita_proteina.png', tag: 'Mañana' },
+    { id: 's4', name: { es: 'Manzana con Crema de Cacahuete', en: 'Apple with Peanut Butter' }, kcal: 190, img: '/meals/manzana_cacahuete.png', tag: 'Tarde' }
   ],
   lunch: [
     { id: 'l1', name: { es: 'Lomo Saltado Cyber-Wok', en: 'Cyber-Wok Lomo Saltado' }, kcal: 580, country: 'Perú', img: '/meals/lomo_saltado.png' },
     { id: 'l2', name: { es: 'Pollo Campero al Pimentón', en: 'Paprika Country Chicken' }, kcal: 490, country: 'España', img: '/meals/pollo_pimenton.png' },
     { id: 'l3', name: { es: 'Bowl Pabellón Power', en: 'Pabellón Power Bowl' }, kcal: 620, country: 'Venezuela', img: '/meals/pabellon_bowl.png' }
-  ],
-  snack2: [
-    { id: 's2_1', name: { es: 'Barrita de Proteína Raw', en: 'Raw Protein Bar' }, kcal: 210, img: '/meals/barrita_proteina.png' },
-    { id: 's2_2', name: { es: 'Manzana con Crema de Cacahuete', en: 'Apple with Peanut Butter' }, kcal: 190, img: '/meals/manzana_cacahuete.png' }
   ],
   dinner: [
     { id: 'd1', name: { es: 'Salmón Miso-Cyber', en: 'Miso-Cyber Salmon' }, kcal: 550, img: '/meals/salmon_miso.png' },
@@ -172,7 +186,7 @@ export const comparisonData = {
     kcal: "550",
     quality: "⭐⭐⭐⭐⭐ (Fresco BCN)",
     hud: { protein: "45g", freshness: "100%" },
-    img: "/recipe1.png"
+    img: "/comp/warmfood.png"
   },
   competitors: [
     {
@@ -184,7 +198,7 @@ export const comparisonData = {
       kcal: "750",
       quality: "⚠️ Refrigerado/Viajado",
       hud: { process: "INDUSTRIAL", state: "REFRIGERATED" },
-      img: "/comp_wetaca.png"
+      img: "/comp/wetaca.png"
     },
     {
       id: "mercadona",
@@ -195,7 +209,7 @@ export const comparisonData = {
       kcal: "600",
       quality: "❌ Conservantes",
       hud: { sodium: "HIGH", state: "PLASTIC" },
-      img: "/comp_mercadona.png"
+      img: "/comp/mercadona.png"
     }
   ]
 };

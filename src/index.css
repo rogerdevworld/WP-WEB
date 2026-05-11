@@ -16,12 +16,12 @@ body {
 
 @layer components {
   .btn-cyber {
-    @apply relative px-6 py-3 font-display font-bold uppercase tracking-wider transition-all duration-300;
+    @apply relative px-8 py-3 font-display font-bold uppercase tracking-wider transition-all duration-500;
     clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
   }
   
   .btn-cyber-primary {
-    @apply btn-cyber bg-primary text-black hover:bg-white hover:scale-105 active:scale-95;
+    @apply btn-cyber bg-primary text-black hover:bg-white hover:scale-[1.03] active:scale-95 shadow-[0_0_25px_rgba(255,215,0,0.35)];
   }
   
   .btn-cyber-outline {
@@ -29,16 +29,18 @@ body {
   }
   
   .card-cyber {
-    @apply bg-white/5 border border-white/10 backdrop-blur-md rounded-lg overflow-hidden transition-all duration-500 hover:border-primary/50;
+    @apply bg-[#0a0a0a]/80 border border-white/10 backdrop-blur-3xl rounded-xl overflow-hidden transition-all duration-700 hover:border-primary/40 relative;
+  }
+
+  .bg-grid {
+    background-image: 
+      linear-gradient(to right, rgba(255,215,0,0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,215,0,0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
   }
 
   .hud-line {
     @apply h-px bg-primary/30 relative overflow-hidden;
-  }
-
-  .hud-line::after {
-    content: '';
-    @apply absolute top-0 left-0 h-full w-20 bg-primary shadow-[0_0_15px_#FFD700] animate-[shimmer_2s_infinite];
   }
 }
 

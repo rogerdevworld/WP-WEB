@@ -1,0 +1,56 @@
+services:
+  postgres:
+    build:
+      context: ..
+      dockerfile: srcs/requirements/postgres/Dockerfile
+    container_name: postgres
+    restart: always
+    env_file: .env
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - foodlive_net
+
+  backend:
+    build:
+      context: ..
+      dockerfile: srcs/requirements/backend/Dockerfile
+    container_name: backend
+    restart: always
+    env_file: .env
+    volumes:
+      - ../django_backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - foodlive_net
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: srcs/requirements/nginx/Dockerfile
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - foodlive_net
+
+volumes:
+  postgres_data:
+
+networks:
+  foodlive_net:
+    driver: bridge

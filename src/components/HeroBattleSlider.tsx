@@ -32,9 +32,9 @@ export default function HeroBattleSlider() {
           <button
             key={c.id}
             onClick={() => setActiveCompIdx(i)}
-            className={`px-6 py-2 font-mono text-[10px] tracking-widest border transition-all ${
+            className={`px-8 py-3 rounded-xl font-mono text-[10px] tracking-widest border transition-all duration-500 ${
               activeCompIdx === i 
-                ? 'bg-primary text-black border-primary font-black' 
+                ? 'bg-primary text-black border-primary font-black shadow-[0_0_15px_rgba(255,215,0,0.3)]' 
                 : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'
             }`}
           >

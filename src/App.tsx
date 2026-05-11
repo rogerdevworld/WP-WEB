@@ -5,10 +5,6 @@ import { i18n } from './data'
 import Demo from './demo/Demo'
 import Panel from './demo/Panel'
 
-/**
- * FoodLive — Cyber-Health Platform
- * Main entry point with Tailwind + Framer Motion.
- */
 export default function App() {
   const [lang, setLang] = useState('es')
   const [page, setPage] = useState('demo')
@@ -18,6 +14,7 @@ export default function App() {
   // Auth state
   const [user, setUser] = useState<any>(null)
   const [selectedDays, setSelectedDays] = useState<Set<number>>(new Set())
+  const [loading, setLoading] = useState(true)
 
   // Form Fields State
   const [email, setEmail] = useState('')
@@ -27,14 +24,34 @@ export default function App() {
   const [height, setHeight] = useState('')
   const [weight, setWeight] = useState('')
 
-  // Persistence
+  // Persistence (Safe loading + Re-fetch)
   useEffect(() => {
-    const savedUser = localStorage.getItem('warnfood_user')
-    if (savedUser) {
-      setUser(JSON.parse(savedUser))
-      setPage('panel')
-    }
-  }, [])
+    const initAuth = async () => {
+      try {
+        const savedUser = localStorage.getItem('warnfood_user');
+        if (savedUser) {
+          const parsed = JSON.parse(savedUser);
+          if (parsed && parsed.userId) {
+            setUser(parsed);
+            setPage('panel');
+
+            const res = await fetch(`/api/profile/me/${parsed.userId}`);
+            if (res.ok) {
+              const freshData = await res.json();
+              const updatedUser = { ...parsed, ...freshData };
+              setUser(updatedUser);
+              localStorage.setItem('warnfood_user', JSON.stringify(updatedUser));
+            }
+          }
+        }
+      } catch (e) {
+        localStorage.removeItem('warnfood_user');
+      } finally {
+        setLoading(false);
+      }
+    };
+    initAuth();
+  }, []);
 
   const toggleLang = () => setLang((l) => l === 'es' ? 'en' : 'es')
   
@@ -44,9 +61,6 @@ export default function App() {
     setPage('demo')
   }
 
-  /**
-   * Auth Handler
-   */
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     const endpoint = isRegistering ? '/api/register' : '/api/login'
@@ -60,10 +74,8 @@ export default function App() {
       })
       const data = await response.json()
       if (response.ok) {
-        // En login el backend ya devuelve el perfil, en registro lo construimos
-        const userData = isRegistering ? { email, name, height, weight, phone, userId: data.userId } : data;
-        setUser(userData)
-        localStorage.setItem('warnfood_user', JSON.stringify(userData))
+        setUser(data)
+        localStorage.setItem('warnfood_user', JSON.stringify(data))
         setShowLogin(false)
         setPassword('')
         setPage('panel')
@@ -75,13 +87,15 @@ export default function App() {
     }
   }
 
-  /**
-   * AuthModal HUD
-   */
+  if (loading) return (
+    <div className="bg-black min-h-screen flex items-center justify-center font-mono text-primary animate-pulse">
+      INITIALIZING_BIO_PROTOCOL...
+    </div>
+  );
 
   return (
     <div className="bg-black text-white min-h-screen font-sans selection:bg-primary selection:text-black">
-      <AnimatePresence mode="wait">
+      <main>
         {page === 'demo' ? (
           <Demo 
             key="demo"
@@ -89,7 +103,7 @@ export default function App() {
             toggleLang={toggleLang} 
             goTo={setPage} 
             user={user} 
-            setUser={handleLogout}
+            onLogout={handleLogout}
             setShowLogin={setShowLogin}
             setIsRegistering={setIsRegistering}
             selectedDays={selectedDays}
@@ -102,12 +116,13 @@ export default function App() {
             toggleLang={toggleLang} 
             goTo={setPage} 
             user={user} 
-            setUser={handleLogout}
+            setUser={setUser}
+            onLogout={handleLogout}
             selectedDays={selectedDays}
             setSelectedDays={setSelectedDays}
           />
         )}
-      </AnimatePresence>
+      </main>
 
       <div className="fixed bottom-4 left-4 z-50 pointer-events-none opacity-20 hidden md:block">
         <div className="text-[10px] font-mono tracking-tighter">
@@ -117,7 +132,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Auth Modal HUD */}
       <AnimatePresence>
         {showLogin && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-md" onClick={() => setShowLogin(false)}>
@@ -125,7 +139,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
               animate={{ opacity: 1, scale: 1, rotateX: 0 }}
               exit={{ opacity: 0, scale: 0.9, rotateX: 20 }}
-              className="card-cyber max-w-md w-full p-10 bg-black/80 relative"
+              className="card-cyber max-w-md w-full p-10 relative"
               onClick={e => e.stopPropagation()}
             >
               <div className="absolute -top-1 -left-1 w-8 h-8 border-t-2 border-l-2 border-primary" />
