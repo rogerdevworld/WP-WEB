@@ -74,10 +74,10 @@ export default function DashboardTab({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
         {/* Left Column: Calendar (8 Cols) */}
-        <div className="lg:col-span-8 space-y-8">
-          <div className="card-cyber p-8">
+        <div className="lg:col-span-8">
+          <div className="card-cyber p-8 h-full flex flex-col">
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h3 className="text-[10px] font-mono text-primary tracking-widest uppercase mb-2">Deployment Calendar</h3>
@@ -88,7 +88,7 @@ export default function DashboardTab({
               </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-4 mb-10">
+            <div className="grid grid-cols-7 gap-4 mb-6 flex-1 content-start">
               {['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'].map(d => (
                 <div key={d} className="text-center text-[10px] font-mono text-gray-500 font-black">{d}</div>
               ))}
@@ -116,7 +116,6 @@ export default function DashboardTab({
                             : 'bg-white/2 border-white/10 text-gray-500 hover:border-primary/40'
                     }`}
                   >
-                    {/* Loading/Flowing background for active days */}
                     {isSelected && (
                       <motion.div 
                         initial={{ x: '-100%' }}
@@ -156,15 +155,15 @@ export default function DashboardTab({
         {/* Right Column: Bio-Chart & Radar (4 Cols) */}
         <div className="lg:col-span-4 flex flex-col gap-8">
           {/* Top: Weight/Fat Tracking */}
-          <div className="card-cyber p-8 bg-black/40 backdrop-blur-xl border border-white/5">
+          <div className="card-cyber p-8 bg-black/40 backdrop-blur-xl border border-white/5 flex-1 flex flex-col">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-[10px] font-mono text-primary tracking-widest uppercase flex items-center gap-2">
-                <Activity size={14} /> Bio-Status Tracking
+                <Activity size={14} /> Bio-Status
               </h3>
               <div className="px-2 py-0.5 bg-green-500/10 rounded text-[7px] font-mono text-green-500 uppercase border border-green-500/20">Sync_Active</div>
             </div>
 
-            <div className="h-[180px]">
+            <div className="flex-1 min-h-[140px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <defs>
@@ -203,7 +202,7 @@ export default function DashboardTab({
               <div className="text-[8px] font-mono text-gray-500 uppercase">Analysis_V2.0</div>
             </div>
 
-            <div className="flex-1 flex items-center justify-center py-4">
+            <div className="flex-1 flex items-center justify-center py-4 min-h-[200px]">
               <RadarChart data={[
                 { label: 'Proteína', actual: 85, target: 90 },
                 { label: 'Carbo', actual: 60, target: 70 },
@@ -217,11 +216,8 @@ export default function DashboardTab({
             <div className="mt-4 pt-4 border-t border-white/5">
               <div className="flex items-center gap-2 mb-2">
                  <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_#FFD700]" />
-                 <span className="text-[8px] font-mono text-gray-400 uppercase">Estado Nutricional: Óptimo</span>
+                 <span className="text-[8px] font-mono text-gray-400 uppercase">Status: Óptimo</span>
               </div>
-              <p className="text-[9px] text-gray-500 font-mono leading-relaxed">
-                Nivel de micronutrientes superior al 80%. Se recomienda aumentar ingesta de Carbohidratos complejos para el entrenamiento de mañana.
-              </p>
             </div>
           </div>
         </div>
