@@ -1,6 +1,46 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
-from .models import UserProfile, MealSelection, Meal, MealHistory
+from .models import UserProfile, MealSelection, Meal, MealHistory, MealInventory, Invoice, Cart, CartItem, Subscription, Order, OrderItem
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'total_amount', 'status', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('user__username', 'id')
+
+@admin.register(OrderItem)
+class OrderItemAdmin(admin.ModelAdmin):
+    list_display = ('order', 'meal', 'quantity', 'barcode')
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'plan_name', 'price', 'start_date', 'end_date', 'is_active')
+    list_filter = ('plan_name', 'is_active')
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('user', 'created_at', 'updated_at')
+
+@admin.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ('cart', 'meal', 'quantity', 'added_at')
+
+@admin.register(MealInventory)
+class MealInventoryAdmin(admin.ModelAdmin):
+    list_display = ('meal', 'stock_quantity', 'last_restock', 'stock_status')
+    list_editable = ('stock_quantity',)
+    
+    def stock_status(self, obj):
+        if obj.stock_quantity <= 0: return mark_safe('<b style="color: red;">AGOTADO</b>')
+        if obj.stock_quantity < 20: return mark_safe('<b style="color: orange;">BAJO</b>')
+        return mark_safe('<b style="color: green;">ÓPTIMO</b>')
+    stock_status.short_description = 'Estado'
+
+@admin.register(Invoice)
+class InvoiceAdmin(admin.ModelAdmin):
+    list_display = ('invoice_number', 'user', 'total_amount', 'items_count', 'created_at')
+    readonly_fields = ('invoice_number', 'user', 'total_amount', 'items_count', 'items_data', 'created_at')
+    search_fields = ('invoice_number', 'user__email')
 
 @admin.register(Meal)
 class MealAdmin(admin.ModelAdmin):

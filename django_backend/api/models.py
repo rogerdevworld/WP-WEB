@@ -29,6 +29,10 @@ class UserProfile(models.Model):
     
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = "Perfil de Usuario"
+        verbose_name_plural = "Perfiles de Usuarios"
+
     def __str__(self):
         return f"Perfil de {self.user.username}"
 
@@ -82,6 +86,10 @@ class Meal(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = "Ración"
+        verbose_name_plural = "Raciones (Menú)"
+
     def save(self, *args, **kwargs):
         if not self.barcode:
             import random
@@ -101,6 +109,8 @@ class MealSelection(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        verbose_name = "Selección Semanal"
+        verbose_name_plural = "Selecciones Semanales"
         unique_together = ('user', 'date')
 
     def __str__(self):
@@ -137,7 +147,128 @@ class MealHistory(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
+        verbose_name = "Historial Bio-Nutricional"
+        verbose_name_plural = "Historiales Bio-Nutricionales"
         ordering = ['-date']
 
     def __str__(self):
         return f"{self.user.username} - {self.meal.name_es} ({self.date})"
+
+class MealInventory(models.Model):
+    meal = models.OneToOneField(Meal, on_delete=models.CASCADE, related_name='inventory')
+    stock_quantity = models.IntegerField(default=100)
+    last_restock = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Inventario de Ración"
+        verbose_name_plural = "Inventarios de Raciones"
+
+    def __str__(self):
+        return f"Stock {self.meal.id_code}: {self.stock_quantity}"
+
+class Invoice(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='invoices')
+    invoice_number = models.CharField(max_length=20, unique=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    items_count = models.IntegerField(default=1)
+    status = models.CharField(max_length=20, default='paid') # paid, pending, cancelled
+    items_data = models.JSONField(help_text="Copia de los platos comprados con sus códigos de barras")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            import datetime
+            import random
+            now = datetime.datetime.now()
+            self.invoice_number = f"WF-{now.strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Factura"
+        verbose_name_plural = "Facturas"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Factura {self.invoice_number} - {self.user.username}"
+
+class Cart(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Carrito"
+        verbose_name_plural = "Carritos"
+
+    def __str__(self):
+        return f"Carrito de {self.user.username}"
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    meal = models.ForeignKey(Meal, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=1)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Ítem de Carrito"
+        verbose_name_plural = "Ítems de Carritos"
+
+    def __str__(self):
+        return f"{self.quantity}x {self.meal.name_es} en {self.cart}"
+
+class Subscription(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    plan_name = models.CharField(max_length=50) # Basic, Pro, Elite
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    start_date = models.DateField(auto_now_add=True)
+    end_date = models.DateField()
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Suscripción"
+        verbose_name_plural = "Suscripciones"
+
+    def __str__(self):
+        return f"Plan {self.plan_name} - {self.user.username}"
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('PENDING', 'Pendiente de Pago'),
+        ('PAID', 'Pagado - En Cola'),
+        ('COOKING', 'Cocinando'),
+        ('READY', 'Listo para Entrega'),
+        ('DELIVERED', 'Entregado'),
+        ('CANCELLED', 'Cancelado'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Pedido"
+        verbose_name_plural = "Pedidos"
+
+    def __str__(self):
+        return f"Pedido #{self.id} - {self.user.username} ({self.status})"
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    meal = models.ForeignKey(Meal, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=1)
+    price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
+    barcode = models.CharField(max_length=50, blank=True)
+
+    class Meta:
+        verbose_name = "Ítem de Pedido"
+        verbose_name_plural = "Ítems de Pedidos"
+
+    def save(self, *args, **kwargs):
+        if not self.barcode:
+            import random
+            self.barcode = f"WF-ORD-{random.randint(1000000, 9999999)}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.quantity}x {self.meal.name_es} (Pedido #{self.order.id})"
