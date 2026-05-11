@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
   X, LogOut, User as UserIcon, Settings as SettingsIcon, ChefHat, History as HistoryIcon, 
-  CreditCard, LayoutDashboard, Bell, ChevronDown, ChevronLeft, AlertTriangle
+  CreditCard, LayoutDashboard, Bell, ChevronDown, ChevronLeft, AlertTriangle, UserCircle, Users, Copy
 } from 'lucide-react';
 import { i18n, mealOptions } from '../data';
 
@@ -267,7 +267,7 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
 
           <nav className="space-y-2">
             {[
-              { id: 'dashboard', icon: LayoutDashboard, label: t.panel.dashboard },
+              { id: 'dashboard', icon: UserCircle, label: 'Perfil' },
               { id: 'menu', icon: ChefHat, label: t.nav.menu },
               { id: 'history', icon: HistoryIcon, label: 'Historial' },
               { id: 'billing', icon: CreditCard, label: 'Suscripción' },
@@ -364,7 +364,39 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
         </nav>
 
         <main className="p-8 max-w-7xl mx-auto">
-          {activeTab === 'dashboard' && <DashboardTab selectedDays={selectedDays} monthName={monthName} daysInMonth={daysInMonth} firstDow={firstDow} dailySelections={dailySelections} toggleDay={toggleDay} setEditingDay={setEditingDay} chartData={chartData} user={user} catalogMeals={catalogMeals} />}
+          {activeTab === 'dashboard' && (
+            <div>
+              <DashboardTab selectedDays={selectedDays} monthName={monthName} daysInMonth={daysInMonth} firstDow={firstDow} dailySelections={dailySelections} toggleDay={toggleDay} setEditingDay={setEditingDay} chartData={chartData} user={user} catalogMeals={catalogMeals} />
+              
+              {/* REFERRAL_PROGRAM_BAR */}
+              <div className="card-cyber p-6 bg-gradient-to-r from-primary/10 to-transparent border-primary/20 flex flex-col md:flex-row justify-between items-center gap-6 mt-12 overflow-hidden relative group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all" />
+                <div className="flex items-center gap-5 relative z-10">
+                  <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-black shadow-[0_0_15px_rgba(255,215,0,0.5)]">
+                     <Users size={24} />
+                  </div>
+                  <div>
+                     <h4 className="text-lg font-display font-black text-white uppercase italic">Bio-Referral Program</h4>
+                     <p className="text-[10px] font-mono text-gray-500 uppercase tracking-tighter">Invita a otros Hackers y recibe créditos para canjear por comida</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-xl p-3 pr-4 group-hover:border-primary/50 transition-all relative z-10">
+                  <span className="text-xs font-mono text-primary font-black uppercase ml-2 tracking-widest">
+                    FOODLIVE-USER-{user?.id || user?.userId || '0000'}
+                  </span>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(`FOODLIVE-USER-${user?.id || user?.userId || '0000'}`);
+                    }}
+                    className="p-2 bg-primary/20 hover:bg-primary text-primary hover:text-black rounded-lg transition-all"
+                  >
+                     <Copy size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {activeTab === 'menu' && <div className="space-y-12"><div className="text-center"><div className="text-[10px] font-mono text-primary tracking-[0.5em] uppercase mb-4">BIO_CATALOG_SYNC</div><h2 className="text-5xl font-display font-black uppercase text-white">Catálogo de Alto Rendimiento</h2></div><MealCatalog meals={catalogMeals} lang={lang} sizeMultiplier={user?.tupper_size === 'S' ? 0.8 : user?.tupper_size === 'L' ? 1.3 : 1} onViewDetails={setSelectedMealForDetails} /></div>}
           {activeTab === 'history' && <HistoryTab mealHistory={mealHistory} onViewDetails={setSelectedMealForDetails} onEvaluate={setCurrentFeedback} />}
           {activeTab === 'billing' && <BillingTab user={user} selectedDays={selectedDays} />}
