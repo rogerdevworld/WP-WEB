@@ -121,11 +121,20 @@ class MealHistory(models.Model):
     # Visual Feedback
     meal_photo = models.ImageField(upload_to='feedback_photos/', blank=True, null=True)
     
+    # Tracking & ADN (Barcode)
+    barcode = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    
     # Incident Reporting
     is_reported = models.BooleanField(default=False)
     issue_details = models.TextField(blank=True, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.barcode:
+            import uuid
+            self.barcode = f"WF-HIST-{uuid.uuid4().hex[:12].upper()}"
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-date']

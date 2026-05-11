@@ -96,3 +96,4 @@ class MealHistoryOut(Schema):
     is_reported: bool
     issue_details: Optional[str] = None
     meal_photo: Optional[str] = None
+    barcode: Optional[str] = None

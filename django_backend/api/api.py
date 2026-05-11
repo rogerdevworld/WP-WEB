@@ -99,7 +99,25 @@ def select_meal(request, user_id: int, data: MealSelectionIn):
                 "status": "confirmed"
             }
         )
-        return 200, "Selección guardada correctamente"
+
+        # ADN_TRACKING_SYSTEM: Sincronizar historial para generación de códigos de barras
+        # Eliminamos historiales pendientes previos para este día (evitar duplicados si re-edita)
+        MealHistory.objects.filter(user=user, date=date_obj, rating=0).delete()
+        
+        # Generar nuevas raciones con tracking automático
+        for category, meal_codes in data.selections.items():
+            if isinstance(meal_codes, list):
+                for code in meal_codes:
+                    meal_obj = Meal.objects.filter(id_code=code).first()
+                    if meal_obj:
+                        # El método .save() de MealHistory generará el barcode único
+                        MealHistory.objects.create(
+                            user=user,
+                            meal=meal_obj,
+                            date=date_obj
+                        )
+
+        return 200, "Selección guardada y protocolos de rastreo (Barcode) generados correctamente"
     except Exception as e:
         return 400, {"error": str(e)}
 

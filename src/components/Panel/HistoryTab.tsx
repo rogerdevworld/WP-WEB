@@ -100,7 +100,7 @@ export default function HistoryTab({ mealHistory, onViewDetails, onEvaluate }: H
                         <div key={i} className="bg-white" style={{ width: i % 3 === 0 ? '3px' : '1.5px', height: `${h * 1.5}px` }} />
                       ))}
                     </div>
-                    <div className="text-[9px] font-mono text-white/30 uppercase tracking-tighter mb-4">{item.meal.barcode || 'NO_BARCODE'}</div>
+                    <div className="text-[9px] font-mono text-primary font-bold uppercase tracking-tighter mb-4">{item.barcode || 'WF-PENDING-SYNC'}</div>
                     <div className="text-2xl font-display font-black text-white">{item.meal.kcal} <span className="text-xs text-primary font-mono ml-1">KCAL</span></div>
                   </div>
                   

@@ -149,6 +149,31 @@ export default function DashboardTab({
                 );
               })}
             </div>
+
+            {/* PAYMENT_GATEWAY_SECTION */}
+            {selectedDays.size > 0 && (
+              <div className="mt-8 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                    <CreditCard size={24} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Total Acumulado</div>
+                    <div className="text-2xl font-display font-black text-white">
+                      {Array.from(selectedDays).reduce((acc, day) => acc + calculateDayPrice(dailySelections[day] || {}), 0).toFixed(2)}€
+                    </div>
+                  </div>
+                </div>
+                
+                <button className="btn-cyber-primary py-4 px-10 flex items-center gap-3 group overflow-hidden relative">
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                  <span className="relative z-10 flex items-center gap-3">
+                    <Zap size={16} fill="currentColor" />
+                    PAGAR Y ACTIVAR PLAN
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
