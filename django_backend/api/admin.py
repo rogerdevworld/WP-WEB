@@ -31,8 +31,7 @@ class MealAdmin(admin.ModelAdmin):
 
     def display_image(self, obj):
         if obj.img_path:
-            full_url = f"http://localhost{obj.img_path}"
-            return mark_safe(f'<img src="{full_url}" width="45" height="45" style="border-radius: 6px; border: 1px solid #FFD700; object-fit: cover;" />')
+            return mark_safe(f'<img src="{obj.img_path}" width="45" height="45" style="border-radius: 6px; border: 1px solid #FFD700; object-fit: cover;" />')
         return "N/A"
     display_image.short_description = 'Plato'
 
