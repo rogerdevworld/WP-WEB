@@ -98,6 +98,11 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
       fetch(`/api/meals/pending/${user.userId}`).then(res => res.json()).then(data => { if (Array.isArray(data)) setPendingFeedbacks(data); });
       fetch(`/api/meals/history/${user.userId}`).then(res => res.json()).then(data => { if (Array.isArray(data)) setMealHistory(data); });
       fetch(`/api/meals/plans/${user.userId}`).then(res => res.json()).then(data => { if (Array.isArray(data)) setMealPlans(data); });
+
+      // Trigger shipping alert for demo
+      setTimeout(() => {
+        triggerNotify('success', lang === 'es' ? "BIO_LOGISTICS_UPDATE: Entrega en curso (BCN_ZONE_01)" : "BIO_LOGISTICS_UPDATE: Delivery in progress (BCN_ZONE_01)");
+      }, 1500);
     }
   }, [user?.userId]);
 

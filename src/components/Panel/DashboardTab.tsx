@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Timer, CreditCard, Droplets, Zap, Calendar as CalendarIcon, CheckCircle2, Plus, Activity, Scale } from 'lucide-react';
+import { Timer, CreditCard, Droplets, Zap, Calendar as CalendarIcon, CheckCircle2, Plus, Activity, Scale, ShieldCheck } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import RadarChart from './RadarChart';
 import { Target } from 'lucide-react';
@@ -36,42 +36,154 @@ export default function DashboardTab({
     return total;
   };
 
+  const getTodayMacros = () => {
+    let protein = 0;
+    let carbs = 0;
+    const todaySelections = dailySelections[today] || {};
+    Object.values(todaySelections).forEach((ids: any) => {
+      ids.forEach((id: string) => {
+        const meal = catalogMeals.find(m => m.id_code === id);
+        if (meal) {
+          protein += parseFloat(meal.protein || 0);
+          carbs += parseFloat(meal.carbs || 0);
+        }
+      });
+    });
+    return { protein, carbs };
+  };
+
+  const macros = getTodayMacros();
+  const proteinGoal = 120;
+  const carbsGoal = 250;
+
   return (
     <div className="space-y-12">
       {/* Top KPI Section (4 Cards) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        <div className="card-cyber p-6 bg-gradient-to-br from-primary/5 to-transparent">
+        {/* Card 1: Time & Capital */}
+        <div className="card-cyber p-6 bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
           <div className="flex justify-between items-start mb-4">
-            <div className="text-[10px] font-mono text-primary uppercase tracking-widest">Tiempo Ahorrado</div>
-            <Timer size={16} className="text-primary" />
+            <div className="text-[10px] font-mono text-primary uppercase tracking-widest font-black">Bio-Optimization</div>
+            <div className="flex gap-2">
+              <Timer size={14} className="text-primary" />
+              <CreditCard size={14} className="text-primary" />
+            </div>
           </div>
-          <div className="text-3xl font-display font-black">{Math.round(selectedDays.size * 1.5)}h</div>
-          <div className="text-[9px] font-mono text-gray-500 uppercase mt-1">+12% vs semana anterior</div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-display font-black text-white">{Math.round(selectedDays.size * 1.5)}h</span>
+            <span className="text-gray-600 font-mono text-xs">/</span>
+            <span className="text-xl font-display font-black text-primary">{Math.round(selectedDays.size * 3 * 9)}€</span>
+          </div>
+          <div className="text-[9px] font-mono text-gray-500 uppercase mt-2 tracking-tighter">Tiempo + Capital ahorrado este mes</div>
         </div>
-        <div className="card-cyber p-6 bg-gradient-to-br from-green-500/5 to-transparent">
+
+        {/* Card 2: Hydration */}
+        <div className="card-cyber p-6 bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/20">
           <div className="flex justify-between items-start mb-4">
-            <div className="text-[10px] font-mono text-green-500 uppercase tracking-widest">Capital Optimizado</div>
-            <CreditCard size={16} className="text-green-500" />
+            <div className="text-[10px] font-mono text-blue-400 uppercase tracking-widest font-black">Nivel de Hidratación</div>
+            <Droplets size={16} className="text-blue-400 animate-bounce" />
           </div>
-          <div className="text-3xl font-display font-black">{Math.round(selectedDays.size * 3 * 9)}€</div>
-          <div className="text-[9px] font-mono text-gray-500 uppercase mt-1">Ahorro en restauración BCN</div>
+          <div className="text-3xl font-display font-black text-white">85%</div>
+          <div className="text-[9px] font-mono text-blue-400/60 uppercase mt-2">Estado: Metabólicamente Óptimo</div>
         </div>
-        <div className="card-cyber p-6 bg-gradient-to-br from-blue-500/5 to-transparent">
+
+        {/* Card 3: Carbs */}
+        <div className="card-cyber p-6 bg-gradient-to-br from-orange-500/10 to-transparent border-orange-500/20">
           <div className="flex justify-between items-start mb-4">
-            <div className="text-[10px] font-mono text-blue-500 uppercase tracking-widest">Nivel de Hidratación</div>
-            <Droplets size={16} className="text-blue-500" />
+            <div className="text-[10px] font-mono text-orange-400 uppercase tracking-widest font-black">Carbohidratos</div>
+            <Zap size={16} className="text-orange-400" />
           </div>
-          <div className="text-3xl font-display font-black">85%</div>
-          <div className="text-[9px] font-mono text-gray-500 uppercase mt-1">Óptimo para metabolismo</div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-display font-black text-white">{Math.round(macros.carbs)}g</span>
+            <span className="text-gray-600 font-mono text-xs">/ {carbsGoal}g</span>
+          </div>
+          <div className="mt-3 w-full bg-white/5 h-1 rounded-full overflow-hidden">
+             <motion.div initial={{width:0}} animate={{width: `${Math.min(100, (macros.carbs/carbsGoal)*100)}%`}} className="h-full bg-orange-400" />
+          </div>
         </div>
-        <div className="card-cyber p-6 bg-gradient-to-br from-orange-500/5 to-transparent">
+
+        {/* Card 4: Proteins + Recommendation */}
+        <div className={`card-cyber p-6 bg-gradient-to-br border-2 transition-all duration-500 ${macros.protein < proteinGoal ? 'from-red-500/10 to-transparent border-red-500/30' : 'from-green-500/10 to-transparent border-green-500/30'}`}>
           <div className="flex justify-between items-start mb-4">
-            <div className="text-[10px] font-mono text-orange-500 uppercase tracking-widest">Siguiente Entrega</div>
-            <Zap size={16} className="text-orange-500" />
+            <div className="text-[10px] font-mono uppercase tracking-widest font-black text-white">Proteínas Diarias</div>
+            <Activity size={16} className={macros.protein < proteinGoal ? 'text-red-500' : 'text-green-500'} />
           </div>
-          <div className="text-3xl font-display font-black">12 MAY</div>
-          <div className="text-[9px] font-mono text-gray-500 uppercase mt-1">BCN_CORE_STATION_A</div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-display font-black text-white">{Math.round(macros.protein)}g</span>
+            <span className="text-gray-600 font-mono text-xs">/ {proteinGoal}g</span>
+          </div>
+          
+          {macros.protein < proteinGoal ? (
+            <div className="mt-4 p-2 bg-red-500/20 border border-red-500/40 rounded-lg text-[8px] font-mono text-red-500 animate-pulse flex items-center gap-2">
+              <Plus size={10} /> DÉFICIT DETECTADO: ¿Añadir Bio-Snack XL?
+            </div>
+          ) : (
+            <div className="mt-4 p-2 bg-green-500/20 border border-green-500/40 rounded-lg text-[8px] font-mono text-green-500 flex items-center gap-2">
+              <CheckCircle2 size={10} /> OBJETIVO BIOLÓGICO ALCANZADO
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* BIO-LOGISTICS TRACKER */}
+      <div className="card-cyber p-8 bg-black/40 backdrop-blur-xl border border-white/5 relative overflow-hidden">
+        <div className="flex justify-between items-center mb-10">
+          <div>
+            <div className="text-[10px] font-mono text-primary tracking-[0.3em] uppercase mb-1">Logistics_Protocol_v4</div>
+            <h3 className="text-xl font-display font-black text-white uppercase italic">Estado de Despliegue Bio-Hacker</h3>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
+              <span className="text-[9px] font-mono text-primary uppercase font-black">En Tránsito</span>
+            </div>
+            <div className="text-[9px] font-mono text-gray-500 uppercase border-l border-white/10 pl-4">ETA: 08:45 AM</div>
+          </div>
+        </div>
+
+        <div className="relative pt-4 pb-8 px-4">
+          {/* Progress Bar Background */}
+          <div className="absolute top-1/2 left-0 w-full h-[2px] bg-white/5 -translate-y-1/2" />
+          
+          {/* Active Progress Fill */}
+          <motion.div 
+            initial={{ width: '0%' }}
+            animate={{ width: '75%' }}
+            transition={{ duration: 3, ease: "easeInOut" }}
+            className="absolute top-1/2 left-0 h-[2px] bg-gradient-to-r from-primary to-green-500 -translate-y-1/2 shadow-[0_0_15px_#FFD700]"
+          />
+
+          <div className="relative flex justify-between">
+            {[
+              { id: 1, label: 'PREPARACIÓN', icon: <Activity size={16} />, status: 'completed' },
+              { id: 2, label: 'EMPAQUETADO', icon: <Zap size={16} />, status: 'completed' },
+              { id: 3, label: 'CALIDAD_CHECK', icon: <ShieldCheck size={16} />, status: 'active' },
+              { id: 4, label: 'EN_CAMINO', icon: <CreditCard size={16} />, status: 'pending' },
+              { id: 5, label: 'ENTREGADO', icon: <CheckCircle2 size={16} />, status: 'pending' }
+            ].map((step, i) => (
+              <div key={i} className="flex flex-col items-center gap-4 relative z-10">
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: i * 0.2 }}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 border ${
+                    step.status === 'completed' ? 'bg-primary text-black border-primary shadow-[0_0_20px_#FFD700]' : 
+                    step.status === 'active' ? 'bg-black border-primary text-primary animate-pulse shadow-[0_0_30px_rgba(255,215,0,0.3)]' : 
+                    'bg-black border-white/10 text-gray-700'
+                  }`}
+                >
+                  {step.icon}
+                </motion.div>
+                <span className={`text-[8px] font-mono font-black uppercase tracking-widest ${step.status === 'pending' ? 'text-gray-700' : 'text-white'}`}>
+                  {step.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Decorative scanline */}
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent animate-scan" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
