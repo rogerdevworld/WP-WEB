@@ -95,6 +95,7 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
     fetch(`/api/meals/plans/${user.userId}`).then(res => res.json()).then(data => { if (Array.isArray(data)) setMealPlans(data); });
     fetch(`/api/invoices/${user.userId}`).then(res => res.json()).then(data => { if (Array.isArray(data)) setInvoices(data); });
     fetch(`/api/subscriptions/${user.userId}`).then(res => res.json()).then(data => { if (Array.isArray(data)) setSubscriptions(data); });
+    fetch(`/api/orders/${user.userId}`).then(res => res.json()).then(data => { if (Array.isArray(data)) setActiveOrders(data); });
   };
 
   // Initial Data Fetch
@@ -204,8 +205,13 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: user.userId,
-          total: items.reduce((acc, item) => acc + parseFloat(item.price), 0),
-          items: items
+          total: items.reduce((acc, item) => acc + (parseFloat(item.price) || 0), 0),
+          items: items.map(it => ({
+            id_code: it.id_code,
+            name: it.name_es || it.name,
+            price: it.price,
+            category: it.category
+          }))
         })
       });
       if (response.ok) {
@@ -232,10 +238,12 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
     if (!user?.userId) return;
     const success = await handleCheckoutProcess(pendingPurchaseItems);
     if (success) {
-      triggerNotify('success', lang === 'es' ? "Protocolo de compra activado." : "Purchase protocol activated.");
+      triggerNotify('success', lang === 'es' ? "Protocolo de compra activado con éxito. El pedido está en preparación." : "Purchase protocol activated successfully. Order is in prep.");
       setShowPaymentModal(false);
       setPendingPurchaseItems([]);
       refreshData();
+    } else {
+      triggerNotify('error', lang === 'es' ? "BIO_FAILURE: Fallo en el nodo transaccional." : "BIO_FAILURE: Transactional node failure.");
     }
   };
 
@@ -359,41 +367,79 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
                  <div className="text-[10px] font-mono text-primary tracking-[0.5em] uppercase mb-2">DAILY_DIET_HUD</div>
                  <h3 className="text-3xl font-display font-black text-white uppercase">Protocolo 12 Mayo</h3>
               </div>
-              
-              <div className="flex-1 overflow-y-auto space-y-4 pr-4">
-                {(() => {
-                  const today = new Date().toISOString().split('T')[0];
-                  const plan = mealPlans.find(p => p.date === today);
-                  if (!plan) return <div className="text-center py-20 text-gray-500 font-mono text-xs uppercase tracking-widest">Sin raciones programadas para hoy.</div>;
-                  
-                  const dailyItems: any[] = [];
-                  Object.entries(plan.selections).forEach(([type, ids]: [any, any]) => {
-                    ids.forEach((id_code: string) => {
-                      const meal = catalogMeals.find(m => m.id_code === id_code);
-                      if (meal) dailyItems.push({ ...meal, type });
+                          <div className="flex-1 overflow-y-auto space-y-8 pr-4 custom-scrollbar">
+                {/* 1. Programación Diaria */}
+                <div className="space-y-4">
+                  <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2">Plan del Día (Agendado)</div>
+                  {(() => {
+                    const today = new Date().toISOString().split('T')[0];
+                    const plan = mealPlans.find(p => p.date === today);
+                    if (!plan) return <div className="text-center py-10 text-gray-500 font-mono text-[10px] uppercase tracking-widest opacity-30">Sin programación para hoy.</div>;
+                    
+                    const dailyItems: any[] = [];
+                    Object.entries(plan.selections).forEach(([type, ids]: [any, any]) => {
+                      ids.forEach((id_code: string) => {
+                        const meal = catalogMeals.find(m => m.id_code === id_code);
+                        if (meal) dailyItems.push({ ...meal, type });
+                      });
                     });
-                  });
 
-                  return dailyItems.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-6 p-4 bg-white/5 rounded-2xl border border-white/5 group hover:border-primary/30 transition-all">
-                       <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10 shrink-0">
-                          <img src={item.img_path} className="w-full h-full object-cover" />
-                       </div>
-                       <div className="flex-1">
-                          <div className="text-[8px] font-mono text-primary uppercase mb-1">{item.type}</div>
-                          <div className="text-sm font-black text-white uppercase">{item.name_es}</div>
-                          <div className="flex gap-3 mt-2">
-                             <div className="text-[7px] font-mono text-gray-500">{item.kcal} KCAL</div>
-                             <div className="text-[7px] font-mono text-gray-500">{item.protein}G P</div>
-                             <div className="text-[7px] font-mono text-gray-500">{item.carbs}G C</div>
+                    return dailyItems.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-4 p-3 bg-white/5 rounded-2xl border border-white/5 group hover:border-primary/30 transition-all">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 shrink-0">
+                            <img src={item.img_path} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1">
+                            <div className="text-[7px] font-mono text-primary uppercase mb-0.5">{item.type}</div>
+                            <div className="text-xs font-black text-white uppercase">{item.name_es}</div>
+                        </div>
+                        <div className="text-primary opacity-30 group-hover:opacity-100 transition-all">
+                            <CheckCircle2 size={16} />
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+
+                {/* 2. Pedidos Directos (Catálogo) */}
+                {activeOrders.length > 0 && (
+                  <div className="space-y-4">
+                     <div className="text-[10px] font-mono text-primary tracking-widest border-b border-primary/20 pb-2 flex justify-between items-center">
+                        <span>PEDIDOS_PENDIENTES_VENTA</span>
+                        <Zap size={10} className="animate-pulse" />
+                     </div>
+                     <div className="grid grid-cols-1 gap-4">
+                       {activeOrders.map(order => (
+                          <div key={order.id} className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3 relative overflow-hidden group">
+                             <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-30 transition-all">
+                                <Zap size={30} className="text-primary" />
+                             </div>
+                             <div className="flex justify-between items-center text-[8px] font-mono">
+                                <span className="text-primary">ID_ORDEN: #{order.id}</span>
+                                <span className="bg-primary/20 px-2 py-0.5 rounded text-primary uppercase font-bold">{order.status}</span>
+                             </div>
+                             <div className="space-y-2">
+                               {order.items.map((item: any, i: number) => (
+                                  <div key={i} className="flex items-center gap-3">
+                                     <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10">
+                                        <img src={item.img} className="w-full h-full object-cover" />
+                                     </div>
+                                     <div>
+                                        <div className="text-[10px] font-black text-white uppercase">{item.meal_name}</div>
+                                        <div className="text-[7px] font-mono text-gray-500">{item.barcode}</div>
+                                     </div>
+                                  </div>
+                               ))}
+                             </div>
+                             <div className="pt-2 border-t border-white/5 flex justify-between items-center">
+                                <span className="text-[7px] font-mono text-gray-500 uppercase">Total Liquidado</span>
+                                <span className="text-xs font-black text-primary">{parseFloat(order.total_amount).toFixed(2)}€</span>
+                             </div>
                           </div>
-                       </div>
-                       <div className="text-primary opacity-30 group-hover:opacity-100 transition-all">
-                          <CheckCircle2 size={20} />
-                       </div>
-                    </div>
-                  ));
-                })()}
+                       ))}
+                     </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -434,7 +480,7 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
           <nav className="space-y-2">
             {[
               { id: 'dashboard', icon: UserCircle, label: 'Perfil' },
-              { id: 'menu', icon: ChefHat, label: t.nav.menu },
+              { id: 'menu', icon: ChefHat, label: 'Menú' },
               { id: 'history', icon: HistoryIcon, label: 'Historial' },
               { id: 'billing', icon: CreditCard, label: 'Suscripción' },
               { id: 'invoices', icon: ScrollText, label: 'Facturación' },
@@ -475,11 +521,14 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
 
             <div className="relative">
               <button onClick={() => setShowNotificationMenu(!showNotificationMenu)} className="relative p-2 text-gray-500 hover:text-primary transition-all">
-                <Bell size={20} />
+                <Bell size={20} className={pendingFeedbacks.length > 0 ? 'animate-bounce text-primary' : ''} />
                 {(pendingFeedbacks.length + activeOrders.length) > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-primary text-black text-[8px] font-black rounded-full flex items-center justify-center animate-pulse">
-                    {pendingFeedbacks.length + activeOrders.length}
-                  </span>
+                  <>
+                    <span className="absolute top-1 right-1 w-4 h-4 bg-primary text-black text-[8px] font-black rounded-full flex items-center justify-center animate-pulse z-10">
+                      {pendingFeedbacks.length + activeOrders.length}
+                    </span>
+                    <span className="absolute top-1 right-1 w-4 h-4 bg-primary rounded-full animate-ping opacity-50" />
+                  </>
                 )}
               </button>
               <AnimatePresence>
@@ -574,6 +623,8 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
                 firstDow={firstDow} dailySelections={dailySelections} toggleDay={toggleDay} 
                 setEditingDay={setEditingDay} chartData={chartData} user={user} 
                 catalogMeals={catalogMeals} onSwitchTab={setActiveTab}
+                pendingFeedbacks={pendingFeedbacks}
+                onEvaluate={setCurrentFeedback}
                 cards={cards}
                 onPaymentSuccess={onPaymentSuccess}
               />
@@ -611,7 +662,7 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
             <div className="space-y-12">
               <div className="text-center">
                 <div className="text-[10px] font-mono text-primary tracking-[0.5em] uppercase mb-4">BIO_CATALOG_SYNC</div>
-                <h2 className="text-5xl font-display font-black uppercase text-white">Catálogo de Alto Rendimiento</h2>
+                <h2 className="text-5xl font-display font-black uppercase text-white">Menú</h2>
               </div>
               <MealCatalog 
                 meals={catalogMeals} 
@@ -623,7 +674,7 @@ function Panel({ lang, toggleLang, goTo, user, setUser, selectedDays, setSelecte
               />
             </div>
           )}
-          {activeTab === 'history' && <HistoryTab mealHistory={mealHistory} onViewDetails={setSelectedMealForDetails} onEvaluate={setCurrentFeedback} />}
+          {activeTab === 'history' && <HistoryTab mealHistory={mealHistory} onViewDetails={setSelectedMealForDetails} onEvaluate={setCurrentFeedback} onRefresh={refreshData} />}
           {activeTab === 'billing' && (
             <BillingTab 
               user={user} 

@@ -79,18 +79,18 @@ import os
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 # Database configuration
-DB_HOST = os.environ.get('DB_HOST')
+POSTGRES_HOST = os.environ.get('POSTGRES_HOST')
 
-if DB_HOST:
+if POSTGRES_HOST:
     # Docker/Production environment with PostgreSQL
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'warnfood_db'),
-            'USER': os.environ.get('DB_USER', 'warnfood_admin'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'warnfood_secret_key'),
-            'HOST': DB_HOST,
-            'PORT': os.environ.get('DB_PORT', '5432'),
+            'NAME': os.environ.get('POSTGRES_DB', 'foodlive_db'),
+            'USER': os.environ.get('POSTGRES_USER', 'foodlive_admin'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'foodlive_secret_key'),
+            'HOST': POSTGRES_HOST,
+            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
         }
     }
 else:

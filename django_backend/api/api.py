@@ -3,11 +3,15 @@ from ninja.files import UploadedFile
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
-from .models import UserProfile, MealSelection, Meal, MealHistory
-from .schemas import RegisterIn, LoginIn, AuthResponse, ErrorResponse, MealSelectionIn, MealSelectionOut, MealOut, MealHistoryOut, FeedbackIn
+from .models import UserProfile, MealSelection, Meal, MealHistory, Invoice, MealInventory, Cart, CartItem, Subscription, Order, OrderItem
+from .schemas import (
+    RegisterIn, LoginIn, AuthResponse, ErrorResponse, 
+    MealSelectionIn, MealSelectionOut, MealOut, MealHistoryOut, 
+    FeedbackIn, InvoiceOut, OrderIn, CartOut, SubscriptionOut
+)
 from django.db import transaction
 from typing import List
-from datetime import datetime
+from datetime import datetime, date as date_type, timedelta
 
 api = NinjaAPI(title="Warnfood Bio-API", version="1.0.0")
 
@@ -20,6 +24,20 @@ def register(request, data: RegisterIn):
     if User.objects.filter(username=data.email).exists():
         return 400, {"error": "Este correo electrónico ya está registrado"}
     
+    # BIO_REFERRAL_LOGIC
+    bonus_credits = 0
+    if data.referral_code:
+        try:
+            # Extraer ID del formato FOODLIVE-USER-X o usar directo
+            ref_id_raw = data.referral_code.split('-')[-1]
+            ref_id = int(ref_id_raw)
+            if User.objects.filter(id=ref_id).exists():
+                bonus_credits = 300
+            else:
+                return 400, {"error": "ERROR_CODE_REF: El cupón no corresponde a un Bio-Hacker activo."}
+        except ValueError:
+             return 400, {"error": "ERROR_FORMAT_REF: Formato de cupón inválido."}
+
     try:
         with transaction.atomic():
             user = User.objects.create_user(
@@ -38,7 +56,8 @@ def register(request, data: RegisterIn):
                 birth_date=data.birth_date,
                 tupper_size=data.tupper_size or "M",
                 dietary_notes=data.dietary_notes or "",
-                is_vegetarian=data.is_vegetarian or False
+                is_vegetarian=data.is_vegetarian or False,
+                credits=100 + bonus_credits
             )
             return 201, {
                 "message": "Usuario registrado correctamente",
@@ -267,4 +286,172 @@ def update_profile(request, user_id: int,
         "is_vegetarian": profile.is_vegetarian,
         "credits": profile.credits
     }
+
+@api.post("/orders/checkout", response={201: dict, 400: ErrorResponse})
+def checkout(request, data: OrderIn):
+    user = get_object_or_404(User, id=data.user_id)
+    
+    try:
+        with transaction.atomic():
+            # 1. Crear el Pedido (Order)
+            order = Order.objects.create(
+                user=user,
+                total_amount=data.total,
+                status='PAID' # Asumimos pagado tras el flujo del frontend
+            )
+            
+            processed_items = []
+            for item in data.items:
+                meal = get_object_or_404(Meal, id_code=item['id_code'])
+                
+                # Verificar Inventario
+                try:
+                    inventory = meal.inventory
+                    if inventory.stock_quantity > 0:
+                        inventory.stock_quantity -= 1
+                        inventory.save()
+                except:
+                    pass # Si no hay inventario, permitimos la compra en este modo demo
+                
+                # Crear OrderItem
+                order_item = OrderItem.objects.create(
+                    order=order,
+                    meal=meal,
+                    quantity=1,
+                    price_at_purchase=float(meal.price)
+                )
+                
+                processed_items.append({
+                    "id_code": meal.id_code,
+                    "name": meal.name_es,
+                    "price": float(meal.price),
+                    "barcode": order_item.barcode,
+                    "category": meal.category
+                })
+
+            # 2. Crear Factura
+            Invoice.objects.create(
+                user=user,
+                total_amount=data.total,
+                items_count=len(data.items),
+                items_data={"items": processed_items, "order_id": order.id},
+                status='paid'
+            )
+            
+            return 201, {"message": "Protocolo de compra finalizado", "order_id": order.id}
+
+    except Exception as e:
+        return 400, {"error": str(e)}
+
+@api.get("/invoices/{user_id}", response=List[InvoiceOut])
+def get_invoices(request, user_id: int):
+    user = get_object_or_404(User, id=user_id)
+    return Invoice.objects.filter(user=user).order_by('-created_at')
+
+@api.get("/orders/{user_id}", response=List[dict])
+def get_orders(request, user_id: int):
+    user = get_object_or_404(User, id=user_id)
+    orders = Order.objects.filter(user=user).order_by('-created_at')
+    return [
+        {
+            "id": o.id,
+            "total_amount": float(o.total_amount),
+            "status": o.status,
+            "created_at": o.created_at.isoformat(),
+            "items": [
+                {
+                    "meal_name": item.meal.name_es,
+                    "barcode": item.barcode,
+                    "quantity": item.quantity,
+                    "img": item.meal.img_path
+                } for item in o.items.all()
+            ]
+        } for o in orders
+    ]
+
+# --- CART SYSTEM ---
+
+@api.get("/cart/{user_id}", response=CartOut)
+def get_cart(request, user_id: int):
+    user = get_object_or_404(User, id=user_id)
+    cart, _ = Cart.objects.get_or_create(user=user)
+    return {"items": cart.items.all()}
+
+@api.post("/cart/add", response={200: dict, 400: ErrorResponse})
+def add_to_cart(request, user_id: int, meal_id_code: str):
+    user = get_object_or_404(User, id=user_id)
+    meal = get_object_or_404(Meal, id_code=meal_id_code)
+    cart, _ = Cart.objects.get_or_create(user=user)
+    
+    item, created = CartItem.objects.get_or_create(cart=cart, meal=meal)
+    if not created:
+        item.quantity += 1
+        item.save()
+        
+    return {"message": "Ítem añadido al bio-carrito"}
+
+@api.post("/cart/remove", response={200: dict})
+def remove_from_cart(request, user_id: int, meal_id_code: str):
+    user = get_object_or_404(User, id=user_id)
+    cart = get_object_or_404(Cart, user=user)
+    meal = get_object_or_404(Meal, id_code=meal_id_code)
+    
+    item = cart.items.filter(meal=meal).first()
+    if item:
+        if item.quantity > 1:
+            item.quantity -= 1
+            item.save()
+        else:
+            item.delete()
+            
+    return {"message": "Ítem removido"}
+
+@api.post("/cart/clear", response={200: dict})
+def clear_cart(request, user_id: int):
+    user = get_object_or_404(User, id=user_id)
+    cart = get_object_or_404(Cart, user=user)
+    cart.items.all().delete()
+    return {"message": "Carrito vaciado"}
+
+# --- SUBSCRIPTION SYSTEM ---
+
+@api.get("/subscriptions/{user_id}", response=List[SubscriptionOut])
+def get_subscriptions(request, user_id: int):
+    user = get_object_or_404(User, id=user_id)
+    return Subscription.objects.filter(user=user).order_by('-start_date')
+
+@api.post("/subscriptions/upgrade", response={200: dict, 400: ErrorResponse})
+def upgrade_subscription(request, user_id: int, plan_name: str, price: float):
+    user = get_object_or_404(User, id=user_id)
+    
+    with transaction.atomic():
+        # Deactivate current
+        Subscription.objects.filter(user=user, is_active=True).update(is_active=False)
+        
+        # Create new
+        import datetime
+        end_date = date_type.today() + timedelta(days=30)
+        new_sub = Subscription.objects.create(
+            user=user,
+            plan_name=plan_name,
+            price=price,
+            end_date=end_date,
+            is_active=True
+        )
+        
+        # Create Invoice
+        Invoice.objects.create(
+            user=user,
+            total_amount=price,
+            items_count=1,
+            items_data={"items": [{
+                "name_es": f"Suscripción Plan {plan_name}",
+                "price": price,
+                "category": "subscription",
+                "barcode": f"WF-SUB-{new_sub.id}"
+            }]},
+            status='paid'
+        )
+        
+    return {"message": f"Suscripción {plan_name} activada"}
 

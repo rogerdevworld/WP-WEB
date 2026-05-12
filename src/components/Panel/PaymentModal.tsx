@@ -34,22 +34,31 @@ export default function PaymentModal({ isOpen, onClose, items, total, onConfirm,
           <h3 className="text-3xl font-display font-black uppercase text-white">Finalizar Protocolo</h3>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-6 pr-2 mb-8">
+        <div className="flex-1 overflow-y-auto space-y-6 pr-2 mb-8 custom-scrollbar">
           {/* Items Summary */}
           <div className="space-y-3">
              <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2">Resumen del Protocolo</div>
              {items.map((item, idx) => (
-               <div key={idx} className="flex justify-between items-center py-2">
-                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center text-[10px] font-black text-primary border border-white/10">{idx + 1}</div>
-                    <span className="text-xs font-bold text-white uppercase">{item.name_es}</span>
+               <div key={idx} className="flex justify-between items-center py-3 group">
+                 <div className="flex items-center gap-4">
+                    <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-white/10 group-hover:border-primary/50 transition-all">
+                       <img src={item.img_path || item.img} alt="" className="w-full h-full object-cover" />
+                       <div className="absolute inset-0 bg-black/20" />
+                    </div>
+                    <div>
+                       <div className="text-xs font-black text-white uppercase group-hover:text-primary transition-colors">{item.name_es}</div>
+                       <div className="text-[8px] font-mono text-gray-500 uppercase tracking-tighter">{item.category || 'BIO_UNIT'} • x1</div>
+                    </div>
                  </div>
-                 <span className="text-xs font-mono text-gray-400">{parseFloat(item.price).toFixed(2)}€</span>
+                 <span className="text-xs font-mono text-primary font-black">{parseFloat(item.price).toFixed(2)}€</span>
                </div>
              ))}
-             <div className="pt-4 border-t border-white/10 flex justify-between items-end">
-                <span className="text-[10px] font-mono text-gray-500 uppercase">Total a Liquidar</span>
-                <span className="text-3xl font-display font-black text-primary">{total.toFixed(2)}€</span>
+             <div className="pt-4 mt-2 border-t border-white/10 flex justify-between items-end">
+                <div className="flex flex-col">
+                   <span className="text-[8px] font-mono text-gray-400 uppercase tracking-widest">Liquidación Total</span>
+                   <span className="text-[10px] font-mono text-primary animate-pulse">PRTC_READY_FOR_SYNC</span>
+                </div>
+                <span className="text-4xl font-display font-black text-primary drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]">{total.toFixed(2)}€</span>
              </div>
           </div>
 

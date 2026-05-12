@@ -112,44 +112,50 @@ def seed_all():
 
     print(f"Total comidas sincronizadas: {Meal.objects.count()}")
 
-    # 3. Historial (MealHistory) - 5 pendientes (rating=0) y 5 completados
-    MealHistory.objects.filter(user=user).delete()
+    # 3. Seeding for ALL users
+    users = User.objects.all()
     meals = list(Meal.objects.all())
     today = date.today()
-    for i in range(1, 11):
-        target_date = today - timedelta(days=i)
-        rating = 0 if i <= 5 else random.randint(4, 5)
-        comment = "" if rating == 0 else "Excelente calidad nutricional."
+    
+    for u in users:
+        print(f"Sincronizando datos para: {u.username}")
+        # Perfil si no existe
+        UserProfile.objects.get_or_create(user=u)
         
-        MealHistory.objects.create(
-            user=user,
-            meal=random.choice(meals),
-            date=target_date,
-            rating=rating,
-            comment=comment
-        )
-    print("Historial de comidas generado.")
+        # Historial (MealHistory) - 5 pendientes (rating=0) y 5 completados
+        MealHistory.objects.filter(user=u).delete()
+        for i in range(1, 11):
+            target_date = today - timedelta(days=i)
+            rating = 0 if i <= 5 else random.randint(4, 5)
+            comment = "" if rating == 0 else "Excelente calidad nutricional."
+            
+            MealHistory.objects.create(
+                user=u,
+                meal=random.choice(meals),
+                date=target_date,
+                rating=rating,
+                comment=comment
+            )
 
-    # 4. Selecciones Futuras (MealSelection)
-    MealSelection.objects.filter(user=user).delete()
-    for i in range(0, 7):
-        target_date = today + timedelta(days=i)
-        selection_data = {
-            "breakfast": [f"br{random.randint(1, 20)}"],
-            "lunch": [f"ln{random.randint(1, 20)}"],
-            "dinner": [f"dn{random.randint(1, 20)}"],
-            "snack": [f"sk{random.randint(1, 40)}", f"sk{random.randint(1, 40)}"],
-            "juices": [f"jc{random.randint(1, 20)}"]
-        }
-        MealSelection.objects.create(
-            user=user,
-            date=target_date,
-            selections=selection_data,
-            status="confirmed" if i == 0 else "pending"
-        )
-    print("Selecciones de la semana generadas.")
+        # Selecciones Futuras (MealSelection)
+        MealSelection.objects.filter(user=u).delete()
+        for i in range(0, 7):
+            target_date = today + timedelta(days=i)
+            selection_data = {
+                "breakfast": [f"br{random.randint(1, 20)}"],
+                "lunch": [f"ln{random.randint(1, 20)}"],
+                "dinner": [f"dn{random.randint(1, 20)}"],
+                "snack": [f"sk{random.randint(1, 40)}", f"sk{random.randint(1, 40)}"],
+                "juices": [f"jc{random.randint(1, 20)}"]
+            }
+            MealSelection.objects.create(
+                user=u,
+                date=target_date,
+                selections=selection_data,
+                status="confirmed" if i == 0 else "pending"
+            )
 
-    print("SUCCESS: Sistema restaurado con datos de Alex.")
+    print("SUCCESS: Sistema restaurado para todos los Bio-Hackers.")
 
 if __name__ == "__main__":
     seed_all()

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Timer, CreditCard, Droplets, Zap, Calendar as CalendarIcon, CheckCircle2, Plus, Activity, Scale, ShieldCheck, AlertTriangle, Package, Truck, Check } from 'lucide-react';
+import { Timer, CreditCard, Droplets, Zap, Calendar as CalendarIcon, CheckCircle2, Plus, Activity, Scale, ShieldCheck, AlertTriangle, Package, Truck, Check, History } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import RadarChart from './RadarChart';
 import { Target } from 'lucide-react';
@@ -16,14 +16,17 @@ interface DashboardTabProps {
   chartData: any[];
   user: any;
   catalogMeals: any[];
+  pendingFeedbacks: any[];
   onSwitchTab?: (tab: string) => void;
+  onEvaluate?: (feedback: any) => void;
   cards: any[];
   onPaymentSuccess?: () => void;
 }
 
 export default function DashboardTab({ 
   selectedDays, monthName, daysInMonth, firstDow, dailySelections, 
-  toggleDay, setEditingDay, chartData, user, catalogMeals, onSwitchTab, cards,
+  toggleDay, setEditingDay, chartData, user, catalogMeals, 
+  pendingFeedbacks, onSwitchTab, onEvaluate, cards,
   onPaymentSuccess
 }: DashboardTabProps) {
   
@@ -98,11 +101,37 @@ export default function DashboardTab({
   return (
     <div className="space-y-12">
       {/* PROFILE_COMPLETION_ALERT */}
+      {/* PENDING_FEEDBACK_ALERT */}
+      {pendingFeedbacks.length > 0 && (
+        <motion.div 
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-6 overflow-hidden mb-6 relative"
+        >
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-yellow-500/20 animate-scan" />
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center text-yellow-500 animate-pulse">
+               <History size={24} />
+            </div>
+            <div>
+               <h4 className="text-sm font-mono font-black text-yellow-500 uppercase tracking-widest">Protocolo de Bio-Feedback Pendiente</h4>
+               <p className="text-[10px] font-mono text-gray-500 uppercase">Tienes {pendingFeedbacks.length} raciones consumidas pendientes de evaluación biométrica.</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => onSwitchTab?.('history')}
+            className="px-6 py-3 bg-yellow-500 text-black font-mono font-black text-[10px] uppercase rounded-xl hover:scale-105 transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+          >
+            Sincronizar Feedback
+          </button>
+        </motion.div>
+      )}
+
       {isProfileIncomplete && (
         <motion.div 
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
-          className="bg-primary/10 border border-primary/30 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-6 overflow-hidden"
+          className="bg-primary/10 border border-primary/30 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-6 overflow-hidden mb-6"
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary animate-pulse">
@@ -120,6 +149,59 @@ export default function DashboardTab({
             Completar Bio-Formulario
           </button>
         </motion.div>
+      )}
+
+      {/* PENDING_BIO_EVALUATIONS_HUD */}
+      {pendingFeedbacks.length > 0 && (
+        <div className="space-y-6 mb-12">
+          <div className="flex justify-between items-end">
+            <div>
+              <div className="text-[10px] font-mono text-primary tracking-[0.5em] uppercase mb-2">Pending_Bio_Evaluations</div>
+              <h4 className="text-2xl font-display font-black text-white uppercase italic">Alertas de Feedback Pendiente</h4>
+            </div>
+            <button 
+              onClick={() => onSwitchTab?.('history')}
+              className="text-[10px] font-mono text-gray-500 hover:text-primary transition-all uppercase tracking-widest flex items-center gap-2"
+            >
+              Ver Todo el Historial <Plus size={10} />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pendingFeedbacks.map((f, i) => (
+              <motion.div 
+                key={f.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="card-cyber p-6 bg-white/2 border-white/5 hover:border-primary/30 transition-all group relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all" />
+                
+                <div className="flex gap-4 mb-6">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10 shrink-0">
+                    <img src={f.meal.img_path} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[8px] font-mono text-primary uppercase mb-1">{f.date}</div>
+                    <div className="text-sm font-black text-white uppercase truncate mb-1">{f.meal.name_es}</div>
+                    <div className="flex items-center gap-2">
+                       <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                       <span className="text-[8px] font-mono text-gray-500 uppercase">Sin Sincronizar</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => onEvaluate?.(f)}
+                  className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-mono font-black text-primary uppercase hover:bg-primary hover:text-black transition-all flex items-center justify-center gap-2 group-hover:border-primary/50"
+                >
+                  <Activity size={12} /> Iniciar Bio-Evaluación
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Top KPI Section (4 Cards) */}

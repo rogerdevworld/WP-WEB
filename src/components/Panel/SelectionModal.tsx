@@ -135,6 +135,12 @@ export default function SelectionModal({
                 const userSizeMultiplier = user?.tupper_size === 'S' ? 0.8 : user?.tupper_size === 'L' ? 1.3 : 1;
                 const isSelected = selection[activeCategory]?.includes(meal.id_code);
                 
+                const kcal = parseFloat(meal.kcal || 0);
+                const protein = parseFloat(meal.protein || 0);
+                const weight = parseFloat(user?.weight || 0);
+                const target = parseFloat(user?.target_weight || 0);
+                const isRecommended = (weight > target && kcal < 500) || (weight < target && kcal > 600) || (protein > 35);
+
                 return (
                   <MealCard
                     key={meal.id_code}
@@ -145,6 +151,7 @@ export default function SelectionModal({
                     onSelect={() => handleSelection(editingDay, activeCategory, meal.id_code)}
                     onViewDetails={onViewDetails}
                     sizeMultiplier={userSizeMultiplier}
+                    isRecommended={isRecommended}
                   />
                 );
               })}

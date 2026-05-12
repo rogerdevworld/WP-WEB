@@ -59,17 +59,13 @@ export default function MealCard({
 
           {/* Premium HUD Overlay */}
           <div className="absolute top-4 right-4 flex flex-col gap-2 items-end z-20">
-            <div className="flex items-center gap-2 px-3 py-1 bg-primary/20 border border-primary/50 backdrop-blur-md text-primary text-[8px] font-mono rounded-full uppercase tracking-widest">
-               <ShieldCheck size={10} /> BIO_SAFE
-            </div>
+            {/* Eliminado BIO_SAFE */}
             {isRecommended && (
               <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/50 backdrop-blur-md text-green-500 text-[8px] font-mono rounded-full uppercase tracking-widest animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.3)]">
                  <CheckCircle2 size={10} /> RECOMENDADO PARA MÍ
               </div>
             )}
-            <div className="flex items-center gap-2 px-3 py-1 bg-black/60 border border-white/10 backdrop-blur-md text-white text-[8px] font-mono rounded-full opacity-0 group-hover:opacity-100 transition-all uppercase tracking-widest">
-               <Activity size={10} /> SYNC_OK
-            </div>
+            {/* Eliminado SYNC_OK */}
           </div>
 
           <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end z-20">
@@ -130,18 +126,6 @@ export default function MealCard({
               <div className="text-[10px] font-black text-white">{Math.round(meal.carbs * sizeMultiplier)} <span className="text-[6px] text-primary">G</span></div>
             </div>
           </div>
-        </div>
-
-        {/* Footer info instead of cart */}
-        <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
-           <div className="text-[8px] font-mono text-gray-600 uppercase tracking-widest italic flex items-center gap-1">
-             <ShieldCheck size={10} className="text-primary/50" /> Bio-Protocol_Certified
-           </div>
-           {isSelected && (
-              <div className="px-3 py-1 bg-primary text-black text-[8px] font-black rounded-full shadow-[0_0_15px_#FFD700]">
-                SELECCIONADO
-              </div>
-           )}
         </div>
       </div>
     </motion.div>

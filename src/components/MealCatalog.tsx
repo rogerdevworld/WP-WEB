@@ -1,5 +1,7 @@
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CreditCard, Zap, CheckCircle2 } from 'lucide-react';
+import MealCard from './MealCard';
 
 export default function MealCatalog({ 
   meals, lang, limit, sizeMultiplier = 1, onViewDetails, onPurchase, user 
@@ -122,7 +124,7 @@ export default function MealCatalog({
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="fixed bottom-12 left-[280px] z-50"
+            className="fixed bottom-12 right-12 z-50"
           >
             <button 
               onClick={() => { onPurchase?.(selections); setSelections([]); }}

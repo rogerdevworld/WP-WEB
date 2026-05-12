@@ -1,6 +1,6 @@
 from ninja import Schema
 from typing import Optional, List
-from datetime import date
+from datetime import date, datetime
 
 class RegisterIn(Schema):
     email: str
@@ -15,6 +15,7 @@ class RegisterIn(Schema):
     tupper_size: Optional[str] = "M"
     dietary_notes: Optional[str] = ""
     is_vegetarian: Optional[bool] = False
+    referral_code: Optional[str] = None
 
 class LoginIn(Schema):
     email: str
@@ -97,3 +98,33 @@ class MealHistoryOut(Schema):
     issue_details: Optional[str] = None
     meal_photo: Optional[str] = None
     barcode: Optional[str] = None
+
+class InvoiceOut(Schema):
+    id: int
+    invoice_number: str
+    total_amount: float
+    items_count: int
+    status: str
+    items_data: dict
+    created_at: datetime
+
+class OrderIn(Schema):
+    user_id: int
+    total: float
+    items: List[dict] # [ {id_code, name, price, category, ...} ]
+
+class CartItemOut(Schema):
+    id: int
+    meal: MealOut
+    quantity: int
+
+class CartOut(Schema):
+    items: List[CartItemOut]
+
+class SubscriptionOut(Schema):
+    id: int
+    plan_name: str
+    price: float
+    start_date: date
+    end_date: date
+    is_active: bool
